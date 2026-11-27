@@ -122,7 +122,14 @@ class PresetRunRequest(BaseModel):
 
 # --- Public / UI / Health ---
 @app.get("/", response_class=HTMLResponse)
-def index() -> HTMLResponse:
+def homepage() -> HTMLResponse:
+    """Serve the RevertProof Landing Homepage with sticky 5-card scroll workflow."""
+    return HTMLResponse(content=(STATIC_DIR / "home.html").read_text(encoding="utf-8"))
+
+
+@app.get("/app", response_class=HTMLResponse)
+def workspace_app() -> HTMLResponse:
+    """Serve the connected RevertProof Product Workspace (connected to GET STARTED)."""
     return HTMLResponse(content=(STATIC_DIR / "index.html").read_text(encoding="utf-8"))
 
 

@@ -99,7 +99,14 @@ def test_dashboard_api_serves_real_results(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("RP_DATABASE_URL", "sqlite:///:memory:")
     client = TestClient(app)
 
-    assert client.get("/").status_code == 200
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "RECOVER SAFELY." in home.text
+    assert "Detect Risky Migration" in home.text
+
+    workspace = client.get("/app")
+    assert workspace.status_code == 200
+    assert "REVERTPROOF WORKSPACE" in workspace.text
     assert client.get("/api/health").json()["status"] == "ok"
 
     # Run preset safe banking scenario via API
