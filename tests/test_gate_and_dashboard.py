@@ -103,6 +103,9 @@ def test_dashboard_api_serves_real_results(monkeypatch, tmp_path: Path) -> None:
     assert home.status_code == 200
     assert "RECOVER SAFELY." in home.text
     assert "Detect Risky Migration" in home.text
+    assert "Stop Database Changes from" in home.text
+    assert "DATABASE CHANGE" in home.text
+    assert "SAFE DATABASE CHANGES AT" in home.text
 
     workspace = client.get("/app")
     assert workspace.status_code == 200

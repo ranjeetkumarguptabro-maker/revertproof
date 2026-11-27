@@ -627,75 +627,714 @@
       text-transform: uppercase;
     }
 
-    /* ================= POST-WORKFLOW REAL USE CASE & LAUNCH SECTION ================= */
-    .real-use-section {
-      max-width: 1120px;
-      margin: 40px auto 100px;
+    /* ================= SECTION 3: REAL-WORLD EXAMPLE (BEFORE vs WITH REVERTPROOF vs RESULT) ================= */
+    .example-section {
+      max-width: 1220px;
+      margin: 56px auto 96px;
       padding: 0 28px;
     }
 
-    .use-case-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 26px;
-      padding: 48px 44px;
-      box-shadow: var(--shadow-card);
+    .section-eyebrow {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .example-title {
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2rem, 4.1vw, 3.35rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: var(--ink);
+    }
+
+    .example-title .mint-inline {
+      background: #D3F9E0;
+      padding: 2px 16px 6px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    .example-sub {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.96rem;
+      color: var(--muted);
+      margin-top: 12px;
+      margin-bottom: 36px;
+    }
+
+    .example-grid {
       display: grid;
-      grid-template-columns: 1.25fr 1fr;
-      gap: 40px;
+      grid-template-columns: 1fr 1.48fr 0.85fr;
+      gap: 20px;
+      align-items: stretch;
+      position: relative;
+    }
+
+    .ex-panel {
+      border-radius: 22px;
+      padding: 24px;
+      border: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .ex-before { background: #FDF6F5; border-color: #F5E1DE; }
+    .ex-with { background: #F5FBF7; border-color: #DCF2E3; }
+    .ex-result { background: #FFFFFF; border-color: var(--card-border); }
+
+    .ex-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      width: fit-content;
+      margin-bottom: 18px;
+    }
+    .ex-tag.red { background: #FDE2E1; color: #991B1B; }
+    .ex-tag.green { background: #D7F8E3; color: #0B5D3B; }
+    .ex-tag.plain { background: transparent; color: var(--ink); padding-left: 0; font-size: 0.86rem; }
+
+    .before-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin: 6px 0 22px;
+    }
+
+    .before-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .app-tile {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      width: 112px;
+      overflow: hidden;
+      box-shadow: 0 8px 18px rgba(15, 23, 18, 0.06);
+      position: relative;
+    }
+    .app-tile-top {
+      height: 14px;
+      background: #22C55E;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 0 6px;
+    }
+    .app-tile-top i { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,0.8); display: block; }
+    .app-tile-body {
+      padding: 16px 8px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .status-dot {
+      position: absolute;
+      bottom: -8px;
+      right: -8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+    }
+    .status-dot.ok { background: #16A34A; }
+    .status-dot.bad { background: #DC2626; }
+
+    .schema-chip {
+      background: #FDE7E5;
+      color: #7F1D1D;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    .before-fail-banner {
+      background: #FCE3E1;
+      color: #991B1B;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .rp-steps-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0 24px;
+      position: relative;
+    }
+    .rp-steps-row::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      right: 20px;
+      height: 3px;
+      background: #16A34A;
+      z-index: 0;
+    }
+    .rp-step-tile {
+      position: relative;
+      z-index: 1;
+      background: #FFFFFF;
+      border: 1px solid #E5EFE8;
+      border-radius: 16px;
+      padding: 18px 10px;
+      text-align: center;
+      box-shadow: 0 10px 24px rgba(11, 93, 59, 0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .rp-step-tile svg { width: 28px; height: 28px; color: #0B5D3B; }
+    .rp-step-tile span { font-size: 0.84rem; font-weight: 700; line-height: 1.25; }
+
+    .approved-banner {
+      background: #DFF8E7;
+      color: #0B4A2E;
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .result-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      justify-content: space-between;
+    }
+    .res-item {
+      background: #F4F9F4;
+      border: 1px solid #E4EFE6;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .res-item svg { width: 26px; height: 26px; color: #0B5D3B; flex-shrink: 0; }
+    .res-num { font-size: 1.28rem; font-weight: 700; line-height: 1.15; }
+    .res-lbl { font-size: 0.78rem; color: var(--muted); }
+
+    .approach-bar {
+      margin-top: 20px;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      box-shadow: 0 6px 20px rgba(15, 23, 18, 0.035);
+    }
+    .approach-code-bad {
+      background: #FDE7E5;
+      color: #991B1B;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 10px;
+    }
+    .approach-code-good {
+      background: #E2F8E9;
+      color: #0B5D3B;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 10px;
+    }
+
+    /* ================= DARK THEME SECTIONS 4 & 5 ================= */
+    .dark-band {
+      background-color: #090C0B;
+      color: #F3F7F4;
+      background-image:
+        linear-gradient(rgba(140, 234, 179, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(140, 234, 179, 0.045) 1px, transparent 1px);
+      background-size: 64px 64px;
+      padding: 96px 28px 104px;
+    }
+
+    .dark-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    /* Section 4 — Safety Pipeline */
+    .pipe-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+    }
+
+    .dark-heading {
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.05rem, 4.2vw, 3.35rem);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+    .dark-heading .mint-text { color: #8CEAB3; }
+
+    .dark-sub {
+      text-align: center;
+      color: #A8B5AE;
+      font-size: 1.06rem;
+      margin-top: 12px;
+    }
+
+    .stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      max-width: 820px;
+      margin: 38px auto 44px;
+      flex-wrap: wrap;
+    }
+    .step-pill-dark {
+      border: 1.5px solid #8CEAB3;
+      color: #E6F8ED;
+      background: rgba(140, 234, 179, 0.06);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      padding: 9px 26px;
+      border-radius: 999px;
+    }
+    .step-dash {
+      width: 90px;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, #4B6657 0 6px, transparent 6px 12px);
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+    .step-dash::after {
+      content: '';
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #8CEAB3;
+      box-shadow: 0 0 10px rgba(140, 234, 179, 0.65);
+    }
+
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr 1.25fr 1fr;
+      gap: 22px;
       align-items: center;
     }
 
-    .use-case-card h2 {
-      font-size: clamp(1.85rem, 3.2vw, 2.5rem);
-      line-height: 1.12;
-      letter-spacing: -0.02em;
-      margin: 14px 0 16px;
-    }
-
-    .use-case-card p {
-      font-family: 'Newsreader', Georgia, serif;
-      font-size: 1.15rem;
-      line-height: 1.55;
-      color: var(--ink-soft);
-      margin-bottom: 24px;
-    }
-
-    .domain-pills {
+    .pipe-box {
+      background: #121715;
+      border: 1px solid #242E29;
+      border-radius: 20px;
+      padding: 20px;
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
+      flex-direction: column;
+      gap: 12px;
     }
-    .domain-pill {
+    .pipe-box-title {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.76rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      background: var(--mint-soft);
-      color: var(--emerald);
-      border: 1px solid #BBF7D0;
-      padding: 6px 14px;
+      letter-spacing: 0.08em;
+      color: #D7E5DD;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .pipe-item {
+      background: #1B211E;
+      border: 1px solid #2A3530;
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .pipe-item-left { display: flex; align-items: center; gap: 11px; }
+    .pipe-item-title { font-size: 0.88rem; font-weight: 700; color: #F5FAF7; }
+    .pipe-item-sub { font-size: 0.72rem; color: #96A59D; margin-top: 2px; }
+    .pass-badge-dark {
+      background: #8CEAB3;
+      color: #08150E;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.7rem;
+      padding: 4px 10px;
       border-radius: 999px;
     }
 
-    .live-proof-box {
-      background: #FAF9F5;
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 24px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      line-height: 1.65;
+    .engine-center-card {
+      background: linear-gradient(180deg, #E2FBEB 0%, #CFF5DE 100%);
+      color: #0B1912;
+      border-radius: 22px;
+      padding: 28px 22px;
+      box-shadow: 0 20px 50px rgba(140, 234, 179, 0.16);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
     }
-    .live-proof-box .cmd { color: var(--emerald); font-weight: 700; }
-    .live-proof-box .fail-line { color: var(--danger); font-weight: 700; }
-    .live-proof-box .pass-line { color: var(--emerald-bright); font-weight: 700; }
+    .engine-center-card h3 { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.03em; }
+    .engine-center-card .sub { font-size: 0.86rem; color: #1E3A2B; margin-bottom: 10px; }
+    .engine-checklist {
+      width: 100%;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      padding-top: 8px;
+    }
+
+    .gate-approved-pill {
+      background: #8CEAB3;
+      color: #091810;
+      border-radius: 12px;
+      padding: 13px;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.94rem;
+      letter-spacing: 0.05em;
+    }
+    .gate-checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: #D7E5DD;
+      margin: 6px 0;
+    }
+    .gate-icons-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .gate-icon-tile {
+      background: #1B211E;
+      border: 1px solid #2A3530;
+      border-radius: 10px;
+      padding: 10px;
+      display: grid;
+      place-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #E2ECE6;
+    }
+
+    .feedback-loop {
+      margin-top: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .feedback-line {
+      flex: 1;
+      max-width: 260px;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, #3A5446 0 8px, transparent 8px 16px);
+    }
+    .feedback-pill {
+      border: 1.5px solid #8CEAB3;
+      color: #E6F8ED;
+      background: rgba(140, 234, 179, 0.07);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 9px 22px;
+      border-radius: 999px;
+    }
+
+    /* Section 5 — Production Scale & Interactive Chart */
+    .scale-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #25332C, transparent);
+      margin: 88px 0 84px;
+    }
+
+    .scale-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 30px 0 40px;
+    }
+    .scale-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #C7D4CD;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      padding: 10px 22px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .scale-tab:hover { color: #FFFFFF; border-color: #2D3D35; }
+    .scale-tab.active { background: #8CEAB3; color: #09130E; border-color: #8CEAB3; }
+
+    .scale-grid {
+      display: grid;
+      grid-template-columns: 0.92fr 1.38fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .risk-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .risk-item {
+      background: #101513;
+      border: 1px solid #222B27;
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: border-color 0.2s ease;
+    }
+    .risk-item:hover { border-color: #8CEAB3; }
+    .risk-item svg { width: 26px; height: 26px; color: #8CEAB3; flex-shrink: 0; }
+    .risk-item h4 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #8CEAB3;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+    .risk-item p { font-size: 0.86rem; color: #C7D4CD; line-height: 1.4; }
+
+    .chart-panel {
+      background: #101513;
+      border: 1px solid #222B27;
+      border-radius: 22px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .chart-title {
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .chart-body {
+      display: grid;
+      grid-template-columns: 1.45fr 0.78fr;
+      gap: 22px;
+      align-items: end;
+    }
+
+    .bars-area {
+      position: relative;
+      height: 280px;
+      border-left: 2px solid #8EA096;
+      border-bottom: 2px solid #8EA096;
+      padding: 12px 16px 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: end;
+      background-image: repeating-linear-gradient(
+        to top,
+        transparent 0,
+        transparent 68px,
+        rgba(142, 160, 150, 0.16) 69px
+      );
+    }
+
+    .bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar-pair {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 225px;
+      width: 100%;
+      justify-content: center;
+    }
+    .bar-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      height: 100%;
+      width: 42%;
+    }
+    .bar-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #F3F7F4;
+    }
+    .bar-fill {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      transition: height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      min-height: 4px;
+    }
+    .bar-fill.before { background: #4B4E4C; }
+    .bar-fill.after { background: #8CEAB3; }
+
+    .bar-labels-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      padding: 12px 16px 0;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #C7D4CD;
+    }
+
+    .chart-legend {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 18px;
+      font-size: 0.82rem;
+      color: #C7D4CD;
+    }
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .kpi-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .kpi-card {
+      background: #151B18;
+      border: 1px solid #26322C;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .kpi-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #C7D4CD;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .kpi-big { font-size: 1.45rem; font-weight: 700; color: #FFFFFF; display: flex; align-items: center; gap: 10px; }
+    .kpi-delta {
+      background: rgba(140, 234, 179, 0.16);
+      color: #8CEAB3;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .kpi-sub { font-size: 0.78rem; color: #96A59D; margin-top: 4px; }
+
+    .dark-cta-bar {
+      margin-top: 56px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1040px) {
+      .example-grid, .pipeline-grid, .scale-grid, .chart-body { grid-template-columns: 1fr; }
+      .step-dash { display: none; }
+      .stepper-row { gap: 10px; }
+    }
 
     @media (max-width: 960px) {
       .feature-strip { grid-template-columns: repeat(2, 1fr); gap: 18px; }
       .feature-item { border-right: none; }
       .step-unit { flex: 0 0 340px; }
-      .use-case-card { grid-template-columns: 1fr; padding: 32px 24px; }
       .nav-right a.nav-link { display: none; }
     }
   </style>
@@ -951,40 +1590,328 @@
     </div>
   </section>
 
-  <!-- Post-Workflow Section: Real Use Case & Direct Launch Into Product Workspace -->
-  <section id="real-use-case" class="real-use-section">
-    <div class="use-case-card">
-      <div>
-        <span class="anchor-tag"><span class="num-badge">✓</span> READY FOR REAL ENGINEERING TEAMS</span>
-        <h2>Built for Any Relational Schema — Proven on Banking &amp; E-Commerce.</h2>
-        <p>
-          Connect your GitHub repository, configure <code>revertproof.yaml</code>, validate isolated PostgreSQL connections with automatic production-DB protection, and gate every Pull Request before unsafe migrations reach production.
-        </p>
-        <div class="domain-pills">
-          <span class="domain-pill">BANKING LEDGER (1,000 TX)</span>
-          <span class="domain-pill">E-COMMERCE ORDERS</span>
-          <span class="domain-pill">ANY REPO VIA REVERTPROOF.YAML</span>
-          <span class="domain-pill">AWS CODEPIPELINE + RDS</span>
+  <!-- SECTION 3: REAL-WORLD EXAMPLE (Matches Rollback-Proof Database Migration.png) -->
+  <section id="real-use-case" class="example-section">
+    <div class="section-eyebrow">REAL-WORLD EXAMPLE</div>
+    <h2 class="example-title">Stop Database Changes from <span class="mint-inline">Breaking Rollback</span></h2>
+    <div class="example-sub">Banking Transaction Migration</div>
+
+    <div class="example-grid">
+      <!-- BEFORE Panel -->
+      <div class="ex-panel ex-before">
+        <div class="ex-tag red">✕ BEFORE</div>
+        <div class="before-diagram">
+          <div class="before-row">
+            <div class="app-tile">
+              <div class="app-tile-top"><i></i><i></i><i></i></div>
+              <div class="app-tile-body">App V2</div>
+              <span class="status-dot ok">✓</span>
+            </div>
+            <svg width="46" height="20" viewBox="0 0 46 20" fill="none"><path d="M2 10h38M34 4l6 6-6 6" stroke="#2B2E2C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div style="text-align:center;">
+              <svg width="68" height="58" viewBox="0 0 68 58" fill="none">
+                <ellipse cx="34" cy="11" rx="26" ry="8" fill="#F1F5F3" stroke="#D1D5DB"/>
+                <path d="M8 11v34c0 4.4 11.6 8 26 8s26-3.6 26-8V11" fill="#FFFFFF" stroke="#D1D5DB"/>
+                <path d="M8 22c0 4.4 11.6 8 26 8s26-3.6 26-8" stroke="#16A34A" stroke-width="4.5"/>
+                <path d="M8 34c0 4.4 11.6 8 26 8s26-3.6 26-8" stroke="#16A34A" stroke-width="4.5"/>
+              </svg>
+              <div><span class="schema-chip">New Schema</span></div>
+            </div>
+          </div>
+
+          <div class="before-row">
+            <div class="app-tile">
+              <div class="app-tile-top"><i></i><i></i><i></i></div>
+              <div class="app-tile-body">App V1</div>
+              <span class="status-dot bad">✕</span>
+            </div>
+            <div style="flex:1;text-align:center;">
+              <span class="schema-chip" style="margin-bottom:6px;">Rollback</span>
+              <div style="border-top:2px dashed #5C615E;width:100%;"></div>
+            </div>
+          </div>
         </div>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;">
-          <a href="/app" class="btn-pill btn-mint">GET STARTED →</a>
-          <a href="/app?demo=1" class="btn-pill btn-stone">RUN LIVE 1,000-TX DEMO</a>
+        <div class="before-fail-banner">⚠ Rollback to V1 failed</div>
+      </div>
+
+      <!-- WITH REVERTPROOF Panel -->
+      <div class="ex-panel ex-with">
+        <div class="ex-tag green">✓ WITH REVERTPROOF</div>
+        <div class="rp-steps-row">
+          <div class="rp-step-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6M14 4l-4 16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Scan</span>
+          </div>
+          <div class="rp-step-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
+            <span>Test<br/>V1 &amp; V2</span>
+          </div>
+          <div class="rp-step-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4.5 6.2v5.3c0 4.8 3.2 8.7 7.5 9.8 4.3-1.1 7.5-5 7.5-9.8V6.2L12 3Z"/><path d="m9 12.2 2.1 2.1 4.2-4.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Verify<br/>Data</span>
+          </div>
+          <div class="rp-step-tile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/></svg>
+            <span>Deploy</span>
+          </div>
+        </div>
+        <div class="approved-banner">
+          <span class="check-circle">✓</span> Deployment Approved
         </div>
       </div>
 
-      <div class="live-proof-box">
-        <div class="cmd">$ revertproof verify sql/unsafe_v2.sql --fixtures 1000</div>
-        <div>scanner: CRITICAL_FINDING (DROP_COLUMN, ALTER_COLUMN_TYPE)</div>
-        <div>v2_compatibility: PASS | v1_rollback_compatibility: <span class="fail-line">FAIL</span></div>
-        <div class="fail-line">→ Decision: FAIL (exit code 1) — DEPLOYMENT BLOCKED</div>
-        <br/>
-        <div class="cmd">$ revertproof verify sql/safe_expand.sql --fixtures 1000</div>
-        <div>scanner: CLEAN | v2: PASS | v1: PASS | dual_write: PASS</div>
-        <div>integrity: 1,000 / 1,000 exact minor-unit parity</div>
-        <div class="pass-line">→ Decision: PASS (exit code 0) — ROLLBACK VERIFIED</div>
+      <!-- RESULT Panel -->
+      <div class="ex-panel ex-result">
+        <div class="ex-tag plain">📊 RESULT</div>
+        <div class="result-cards">
+          <div class="res-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>
+            <div><div class="res-num">0</div><div class="res-lbl">Rollback failures</div></div>
+          </div>
+          <div class="res-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
+            <div><div class="res-num">1,000 / 1,000</div><div class="res-lbl">Records verified</div></div>
+          </div>
+          <div class="res-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div><div class="res-num">100%</div><div class="res-lbl">Deployment confidence</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Migration Approach Bar -->
+    <div class="approach-bar">
+      <div style="display:flex;align-items:center;gap:12px;font-weight:700;">
+        <span class="num-badge" style="width:38px;height:38px;">⛁</span>
+        <span>Migration<br/>Approach</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span class="approach-code-bad">- DROP COLUMN currency;</span>
+        <span style="color:#16A34A;font-size:1.4rem;font-weight:700;">→</span>
+        <span class="approach-code-good">+ ADD COLUMN amount_minor BIGINT;</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:0.86rem;font-weight:600;border-left:1px solid var(--card-border);padding-left:20px;">
+        <div><span style="color:#16A34A;">●</span> Keep both versions working</div>
+        <div><span style="color:#16A34A;">●</span> Backfill and switch safely</div>
       </div>
     </div>
   </section>
+
+  <!-- SECTIONS 4 & 5: DARK BLUEPRINT BAND -->
+  <div class="dark-band">
+    <div class="dark-inner">
+
+      <!-- SECTION 4: DATABASE CHANGE SAFETY PIPELINE (Matches RevertProof Database Safety Pipeline.png) -->
+      <section id="pipeline">
+        <div class="pipe-brand">
+          <svg width="26" height="26" viewBox="0 0 40 40" fill="none"><path d="M20 3L35 11.5V28.5L20 37L5 28.5V11.5L20 3Z" fill="#0B5D3B" stroke="#8CEAB3" stroke-width="2.5"/><path d="M16.5 20.2L19 22.7L24 17.5" stroke="#8CEAB3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          REVERTPROOF
+        </div>
+        <h2 class="dark-heading">DATABASE CHANGE <span class="mint-text">SAFETY</span> PIPELINE</h2>
+        <div class="dark-sub">Test &bull; Verify &bull; Deploy with Rollback Confidence</div>
+
+        <div class="stepper-row">
+          <span class="step-pill-dark">DETECT</span>
+          <span class="step-dash"></span>
+          <span class="step-pill-dark">TEST</span>
+          <span class="step-dash"></span>
+          <span class="step-pill-dark">VERIFY</span>
+          <span class="step-dash"></span>
+          <span class="step-pill-dark">DEPLOY</span>
+        </div>
+
+        <div class="pipeline-grid">
+          <!-- INPUTS -->
+          <div class="pipe-box">
+            <div class="pipe-box-title">⛁ INPUTS</div>
+            <div class="pipe-item">
+              <div class="pipe-item-left">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.11.79-.25.79-.56v-2.02c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+                <div><div class="pipe-item-title">GitHub PR</div><div class="pipe-item-sub">Migration &amp; code changes</div></div>
+              </div>
+            </div>
+            <div class="pipe-item">
+              <div class="pipe-item-left">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8CEAB3" stroke-width="1.9"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
+                <div><div class="pipe-item-title">Databases</div><div class="pipe-item-sub">PostgreSQL / SQLite</div></div>
+              </div>
+            </div>
+            <div class="pipe-item">
+              <div class="pipe-item-left">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8CEAB3" stroke-width="1.9"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></svg>
+                <div><div class="pipe-item-title">Applications</div><div class="pipe-item-sub">V1 (current) + V2 (new)</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REVERTPROOF ENGINE CENTER -->
+          <div class="engine-center-card">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 3L35 11.5V28.5L20 37L5 28.5V11.5L20 3Z" fill="#0B1912" stroke="#0B1912" stroke-width="2"/><path d="M20 11L27 14V20.5C27 24.8 24 28.2 20 29.5C16 28.2 13 24.8 13 20.5V14L20 11Z" fill="#E2FBEB"/></svg>
+            <h3>REVERTPROOF</h3>
+            <div class="sub">Migration Safety Engine</div>
+            <div class="engine-checklist">
+              <div>✓ Analyze migration risk</div>
+              <div>✓ Test V1 &amp; V2 compatibility</div>
+              <div>✓ Verify data integrity</div>
+              <div>✓ Evaluate rollback safety</div>
+            </div>
+          </div>
+
+          <!-- VERIFICATION -->
+          <div class="pipe-box">
+            <div class="pipe-box-title">⚗ VERIFICATION</div>
+            <div class="pipe-item">
+              <div class="pipe-item-left">
+                <span style="color:#8CEAB3;font-family:'JetBrains Mono',monospace;font-weight:700;">&lt;/&gt;</span>
+                <div><div class="pipe-item-title">Compatibility</div><div class="pipe-item-sub">V1 &amp; V2 on migrated DB</div></div>
+              </div>
+              <span class="pass-badge-dark">PASS</span>
+            </div>
+            <div class="pipe-item">
+              <div class="pipe-item-left">
+                <span style="color:#8CEAB3;">⛁</span>
+                <div><div class="pipe-item-title">Data Integrity</div><div class="pipe-item-sub">Transactions, amounts, currency</div></div>
+              </div>
+              <span class="pass-badge-dark">PASS</span>
+            </div>
+            <div class="pipe-item">
+              <div class="pipe-item-left">
+                <span style="color:#8CEAB3;">↩</span>
+                <div><div class="pipe-item-title">Rollback Test</div><div class="pipe-item-sub">Revert to V1 successfully</div></div>
+              </div>
+              <span class="pass-badge-dark">PASS</span>
+            </div>
+          </div>
+
+          <!-- DEPLOYMENT GATE -->
+          <div class="pipe-box">
+            <div class="pipe-box-title">🚀 DEPLOYMENT GATE</div>
+            <div class="gate-approved-pill">✓ APPROVED</div>
+            <div class="gate-checklist">
+              <div>✓ Safe to deploy</div>
+              <div>✓ Rollback verified</div>
+              <div>✓ Test report (JSON)</div>
+              <div>✓ Stored in AWS S3</div>
+            </div>
+            <div class="gate-icons-row">
+              <div class="gate-icon-tile">GitHub</div>
+              <div class="gate-icon-tile" style="color:#FBBF24;">aws</div>
+              <div class="gate-icon-tile" style="color:#60A5FA;">PG 16</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feedback-loop">
+          <div class="feedback-line"></div>
+          <div class="feedback-pill">↻ CONTINUOUS FEEDBACK</div>
+          <div class="feedback-line"></div>
+        </div>
+      </section>
+
+      <div class="scale-divider"></div>
+
+      <!-- SECTION 5: SAFE DATABASE CHANGES AT PRODUCTION SCALE (Matches RevertProof_ Safe Database Deployments.png) -->
+      <section id="scale">
+        <h2 class="dark-heading">SAFE DATABASE CHANGES AT <span class="mint-text">PRODUCTION</span> SCALE</h2>
+        <div class="dark-sub">Test, verify, and deploy database migrations with rollback confidence.</div>
+
+        <div class="scale-tabs">
+          <button class="scale-tab active" onclick="setScaleTab('deployment', this)">DEPLOYMENT</button>
+          <button class="scale-tab" onclick="setScaleTab('integrity', this)">DATA INTEGRITY</button>
+          <button class="scale-tab" onclick="setScaleTab('compatibility', this)">COMPATIBILITY</button>
+          <button class="scale-tab" onclick="setScaleTab('recovery', this)">RECOVERY</button>
+          <button class="scale-tab" onclick="setScaleTab('impact', this)">IMPACT</button>
+        </div>
+
+        <div class="scale-grid">
+          <!-- Left 5 Risk Cards -->
+          <div class="risk-list">
+            <div class="risk-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
+              <div><h4>RISKY SCHEMA CHANGES</h4><p>Database updates can break rollbacks and older app versions.</p></div>
+            </div>
+            <div class="risk-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6M14 4l-4 16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><h4>COMPATIBILITY GAPS</h4><p>New and old application versions may not work together.</p></div>
+            </div>
+            <div class="risk-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m12 3 9 4.5-9 4.5-9-4.5L12 3Z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg>
+              <div><h4>DATA INTEGRITY RISKS</h4><p>Migrations can accidentally lose or corrupt data.</p></div>
+            </div>
+            <div class="risk-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><h4>SLOW INCIDENT RECOVERY</h4><p>Rollback issues turn small changes into major outages.</p></div>
+            </div>
+            <div class="risk-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3 4.5 6.2v5.3c0 4.8 3.2 8.7 7.5 9.8 4.3-1.1 7.5-5 7.5-9.8V6.2L12 3Z"/></svg>
+              <div><h4>MANUAL &amp; UNCERTAIN RELEASES</h4><p>Teams lack automated proof to safely approve deployments.</p></div>
+            </div>
+          </div>
+
+          <!-- Right Interactive Chart + KPI Stack -->
+          <div class="chart-panel">
+            <div class="chart-title" id="chart-title">DEPLOYMENT RISK &ndash; BEFORE VS. WITH REVERTPROOF</div>
+            <div class="chart-body">
+              <div>
+                <div class="bars-area">
+                  <div class="bar-group">
+                    <div class="bar-pair">
+                      <div class="bar-col"><span class="bar-val" id="b1-val">18%</span><div class="bar-fill before" id="b1-bar" style="height:18%"></div></div>
+                      <div class="bar-col"><span class="bar-val" id="a1-val">0%</span><div class="bar-fill after" id="a1-bar" style="height:2%"></div></div>
+                    </div>
+                  </div>
+                  <div class="bar-group">
+                    <div class="bar-pair">
+                      <div class="bar-col"><span class="bar-val" id="b2-val">12%</span><div class="bar-fill before" id="b2-bar" style="height:12%"></div></div>
+                      <div class="bar-col"><span class="bar-val" id="a2-val">0%</span><div class="bar-fill after" id="a2-bar" style="height:2%"></div></div>
+                    </div>
+                  </div>
+                  <div class="bar-group">
+                    <div class="bar-pair">
+                      <div class="bar-col"><span class="bar-val" id="b3-val">100%</span><div class="bar-fill before" id="b3-bar" style="height:100%"></div></div>
+                      <div class="bar-col"><span class="bar-val" id="a3-val">40%</span><div class="bar-fill after" id="a3-bar" style="height:40%"></div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bar-labels-row">
+                  <span id="l1">Failed Rollbacks</span>
+                  <span id="l2">Data Issues</span>
+                  <span id="l3">Release Time</span>
+                </div>
+                <div class="chart-legend">
+                  <span><i class="legend-dot" style="background:#4B4E4C"></i>Before</span>
+                  <span><i class="legend-dot" style="background:#8CEAB3"></i>With RevertProof</span>
+                </div>
+              </div>
+
+              <div class="kpi-stack">
+                <div class="kpi-card">
+                  <div class="kpi-head">↻ ROLLBACK FAILURES</div>
+                  <div class="kpi-big"><span id="kpi1-num">0</span> <span class="kpi-delta" id="kpi1-delta">▼ 100%</span></div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-head">⛁ DATA INTEGRITY</div>
+                  <div class="kpi-big" id="kpi2-num">1,000 / 1,000</div>
+                  <div class="kpi-sub" id="kpi2-sub">Records verified</div>
+                </div>
+                <div class="kpi-card">
+                  <div class="kpi-head">🚀 RELEASE TIME</div>
+                  <div class="kpi-big" id="kpi3-num">~60%</div>
+                  <div class="kpi-sub" id="kpi3-sub">Faster &amp; safer</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dark-cta-bar">
+          <a href="/app" class="btn-pill btn-mint">GET STARTED WITH REVERTPROOF →</a>
+          <a href="/app?demo=1" class="btn-pill btn-stone">RUN LIVE 1,000-TX DEMO</a>
+        </div>
+      </section>
+    </div>
+  </div>
 
   <script>
     const scrollZone = document.getElementById('workflow');
@@ -1024,6 +1951,59 @@
     window.addEventListener('scroll', updateHorizontalScroll, { passive: true });
     window.addEventListener('resize', updateHorizontalScroll);
     updateHorizontalScroll();
+
+    const scaleData = {
+      deployment: {
+        title: 'DEPLOYMENT RISK \u2013 BEFORE VS. WITH REVERTPROOF',
+        bars: [['18%', 18, '0%', 2], ['12%', 12, '0%', 2], ['100%', 100, '40%', 40]],
+        labels: ['Failed Rollbacks', 'Data Issues', 'Release Time'],
+        kpis: ['0', '▼ 100%', '1,000 / 1,000', 'Records verified', '~60%', 'Faster & safer']
+      },
+      integrity: {
+        title: 'DATA INTEGRITY \u2013 BEFORE VS. WITH REVERTPROOF',
+        bars: [['14%', 14, '0%', 2], ['9%', 9, '0%', 2], ['22%', 22, '0%', 2]],
+        labels: ['Amount Drift', 'Null Corruptions', 'Missing Rows'],
+        kpis: ['0', 'EXACT CENTS', '1,000 / 1,000', 'Minor-unit parity', '100%', 'IDs preserved']
+      },
+      compatibility: {
+        title: 'V1 + V2 CONTRACT COMPATIBILITY \u2013 BEFORE VS. WITH REVERTPROOF',
+        bars: [['35%', 35, '100%', 100], ['20%', 20, '100%', 100], ['0%', 2, '100%', 100]],
+        labels: ['V1 Read Safety', 'V1 Write Safety', 'Dual-Write Sync'],
+        kpis: ['V1 + V2', 'BOTH PASS', '100%', 'Dual-write synced', '0', 'Conflict leaks']
+      },
+      recovery: {
+        title: 'INCIDENT RECOVERY \u2013 BEFORE VS. WITH REVERTPROOF',
+        bars: [['100%', 100, '15%', 15], ['85%', 85, '10%', 10], ['45%', 45, '0%', 2]],
+        labels: ['MTTR Minutes', 'Manual Hotfixes', 'Rollback Failures'],
+        kpis: ['0', 'SAFE REVERT', '100%', 'V1 verified', '~85%', 'Faster recovery']
+      },
+      impact: {
+        title: 'ENGINEERING IMPACT \u2013 BEFORE VS. WITH REVERTPROOF',
+        bars: [['100%', 100, '25%', 25], ['70%', 70, '5%', 5], ['100%', 100, '40%', 40]],
+        labels: ['Review Friction', 'Prod Incidents', 'Release Cycle'],
+        kpis: ['100%', 'AUTOMATED', 'S3 + JSON', 'Audit evidence', '~60%', 'Faster releases']
+      }
+    };
+
+    function setScaleTab(key, btn) {
+      document.querySelectorAll('.scale-tab').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const d = scaleData[key];
+      document.getElementById('chart-title').textContent = d.title;
+      d.bars.forEach((b, i) => {
+        document.getElementById(`b${i+1}-val`).textContent = b[0];
+        document.getElementById(`b${i+1}-bar`).style.height = b[1] + '%';
+        document.getElementById(`a${i+1}-val`).textContent = b[2];
+        document.getElementById(`a${i+1}-bar`).style.height = b[3] + '%';
+        document.getElementById(`l${i+1}`).textContent = d.labels[i];
+      });
+      document.getElementById('kpi1-num').textContent = d.kpis[0];
+      document.getElementById('kpi1-delta').textContent = d.kpis[1];
+      document.getElementById('kpi2-num').textContent = d.kpis[2];
+      document.getElementById('kpi2-sub').textContent = d.kpis[3];
+      document.getElementById('kpi3-num').textContent = d.kpis[4];
+      document.getElementById('kpi3-sub').textContent = d.kpis[5];
+    }
   </script>
 </body>
 </html>
