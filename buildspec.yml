@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - python -m pip install --upgrade pip
+      - python -m pip install -e ".[postgres,aws,dev]"
+  pre_build:
+    commands:
+      - ruff check src tests
+      - pytest -q
+  build:
+    commands:
+      - echo "Running RevertProof Deployment Safety Gate on ${RP_MIGRATION_FILE:-sql/safe_expand.sql}"
+      - revertproof verify "${RP_MIGRATION_FILE:-sql/safe_expand.sql}" --domain "${RP_DOMAIN:-banking}" --fixtures 1000
+  post_build:
+    commands:
+      - ls -la reports/ || true
+
+artifacts:
+  files:
+    - reports/*.json
+    - reports/*.html
+  discard-paths: no

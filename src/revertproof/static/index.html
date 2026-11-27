@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RevertProof — Database-Aware Deployment Rollback Verification</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel: #111827;
+      --border: #1f2937;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --pass: #16a34a;
+      --fail: #dc2626;
+      --warn: #d97706;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.75rem; border-bottom: 1px solid var(--border); background: #0f172a; }
+    header h1 { margin: 0; font-size: 1.25rem; }
+    header p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.85rem; }
+    .nav { display: flex; gap: 0.5rem; padding: 0.75rem 1.75rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; background: #0f172a; }
+    .nav button { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 0.45rem 0.9rem; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+    .nav button.active { background: var(--accent); color: #0b1120; font-weight: 700; border-color: var(--accent); }
+    main { max-width: 1240px; margin: 1.5rem auto; padding: 0 1.25rem 3rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.15rem; margin-bottom: 1rem; }
+    .metric-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .metric-val { font-size: 1.6rem; font-weight: 700; margin-top: 0.35rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.65rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+    .badge-PASS { background: rgba(22, 163, 74, 0.2); color: #4ade80; border: 1px solid var(--pass); }
+    .badge-FAIL, .badge-BLOCKED, .badge-CRITICAL { background: rgba(220, 38, 38, 0.2); color: #f87171; border: 1px solid var(--fail); }
+    .badge-WARNING, .badge-CONDITIONAL, .badge-HIGH_RISK { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid var(--warn); }
+    .badge-NOT_RUN, .badge-SAFE { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid #475569; }
+    .btn { background: var(--accent); color: #0b1120; border: none; padding: 0.5rem 0.95rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-green { background: #22c55e; color: #052e16; }
+    .btn-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    textarea { width: 100%; min-height: 150px; background: #020617; color: #e2e8f0; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.86rem; }
+    th, td { border-bottom: 1px solid var(--border); padding: 0.6rem 0.5rem; text-align: left; }
+    th { color: var(--muted); font-weight: 600; }
+    code { background: #020617; padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.82rem; color: #7dd3fc; }
+    .section { display: none; }
+    .section.active { display: block; }
+    pre { background: #020617; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; overflow-x: auto; font-size: 0.8rem; }
+    .status-msg { color: var(--accent); font-size: 0.88rem; margin-top: 0.5rem; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>RevertProof — Database-Aware Deployment Rollback Verification</h1>
+      <p>Don't just deploy safely. Prove you can recover safely. (Primary Banking Demo + General DB Migrations)</p>
+    </div>
+    <div id="engine-pill" class="badge badge-SAFE">Loading engine...</div>
+  </header>
+
+  <nav class="nav">
+    <button class="active" onclick="showTab('overview', this)">1. Overview</button>
+    <button onclick="showTab('scanner', this)">2. Migration Scanner</button>
+    <button onclick="showTab('compatibility', this)">3. Compatibility Testing</button>
+    <button onclick="showTab('integrity', this)">4. Transaction Integrity</button>
+    <button onclick="showTab('gate', this)">5. Deployment Safety Gate</button>
+    <button onclick="showTab('history', this)">6. Test History</button>
+    <button onclick="showTab('reports', this)">7. Detailed Reports</button>
+  </nav>
+
+  <main>
+    <!-- 1. OVERVIEW -->
+    <section id="tab-overview" class="section active">
+      <div class="card">
+        <strong>Run Live Verification Scenarios (Real Backend Execution)</strong>
+        <div class="btn-row">
+          <button class="btn btn-danger" onclick="runPreset('banking_unsafe')">Scenario A: Unsafe Banking (1,000 tx)</button>
+          <button class="btn btn-green" onclick="runPreset('banking_safe')">Scenario B: Safe Expand Banking (1,000 tx)</button>
+          <button class="btn" onclick="runPreset('banking_rollback')">Scenario C: Rollback to V1 Proof</button>
+          <button class="btn btn-danger" onclick="runPreset('ecommerce_unsafe')">E-Commerce: Unsafe Migration</button>
+          <button class="btn btn-green" onclick="runPreset('ecommerce_safe')">E-Commerce: Safe Expand</button>
+          <button class="btn" onclick="runPreset('full_demo')">Run All Scenarios</button>
+        </div>
+        <div id="run-status" class="status-msg"></div>
+      </div>
+
+      <div class="grid" id="overview-metrics"></div>
+      <div class="card" id="overview-latest">Loading latest run...</div>
+    </section>
+
+    <!-- 2. MIGRATION SCANNER -->
+    <section id="tab-scanner" class="section">
+      <div class="card">
+        <h3>Static SQL Migration Scanner (Works for Any Schema)</h3>
+        <p style="color:var(--muted);font-size:0.86rem;">Paste any PostgreSQL/SQL migration to detect destructive or rollback-breaking patterns.</p>
+        <textarea id="scan-sql">ALTER TABLE transactions
+  ALTER COLUMN amount TYPE JSONB USING jsonb_build_object('value_minor', ROUND(amount * 100)::BIGINT, 'currency', TRIM(currency));
+ALTER TABLE transactions DROP COLUMN currency;</textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="runLiveScan()">Scan SQL</button>
+          <button class="btn btn-green" onclick="runLiveVerify()">Run Full Verification Gate (Banking)</button>
+        </div>
+        <div id="scan-output" style="margin-top:1rem;"></div>
+      </div>
+    </section>
+
+    <!-- 3. COMPATIBILITY TESTING -->
+    <section id="tab-compatibility" class="section">
+      <div class="card" id="compat-panel">Select or run a verification to inspect V2 and V1 read/write contract evidence.</div>
+    </section>
+
+    <!-- 4. TRANSACTION INTEGRITY -->
+    <section id="tab-integrity" class="section">
+      <div class="card" id="integrity-panel">Select or run a verification to inspect exact minor-unit reconciliation.</div>
+    </section>
+
+    <!-- 5. DEPLOYMENT SAFETY GATE -->
+    <section id="tab-gate" class="section">
+      <div class="card" id="gate-panel">Select or run a verification to inspect pipeline gate decision and Expand-and-Contract guidance.</div>
+    </section>
+
+    <!-- 6. TEST HISTORY -->
+    <section id="tab-history" class="section">
+      <div class="card">
+        <h3>Persisted Verification Runs</h3>
+        <table>
+          <thead><tr><th>Run ID</th><th>Domain</th><th>Scenario</th><th>Engine</th><th>Fixtures</th><th>Decision</th><th>Rollback Class</th><th>Action</th></tr></thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 7. DETAILED REPORTS -->
+    <section id="tab-reports" class="section">
+      <div class="card" id="report-detail-panel">Select a run from Test History or run a scenario to inspect raw JSON &amp; HTML evidence.</div>
+    </section>
+  </main>
+
+  <script>
+    let currentReport = null;
+
+    function showTab(name, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    function badge(val) {
+      const cls = ['PASS','FAIL','BLOCKED','WARNING','CONDITIONAL','CRITICAL','HIGH_RISK','NOT_RUN','SAFE'].includes(val) ? val : 'SAFE';
+      return `<span class="badge badge-${cls}">${val}</span>`;
+    }
+
+    async function refreshAll() {
+      const ov = await (await fetch('/api/overview')).json();
+      document.getElementById('engine-pill').textContent = `Engine: ${ov.engine.toUpperCase()}`;
+
+      const latest = ov.latest;
+      if (latest && !currentReport) currentReport = latest;
+
+      const ir = latest?.integrity_report;
+      const v1 = latest?.checks?.v1_rollback_compatibility || 'NOT_RUN';
+      const v2 = latest?.checks?.v2_compatibility || 'NOT_RUN';
+      const gateStatus = latest ? (latest.decision === 'PASS' ? 'PASS' : 'BLOCKED') : 'NOT_RUN';
+
+      document.getElementById('overview-metrics').innerHTML = `
+        <div class="card"><div class="metric-label">Total Migrations Scanned</div><div class="metric-val">${ov.total_migrations_scanned}</div></div>
+        <div class="card"><div class="metric-label">Risky Migrations Detected</div><div class="metric-val">${ov.risky_migrations_detected}</div></div>
+        <div class="card"><div class="metric-label">Latest V2 Status</div><div class="metric-val">${badge(v2)}</div></div>
+        <div class="card"><div class="metric-label">Latest V1 Rollback Status</div><div class="metric-val">${badge(v1)}</div></div>
+        <div class="card"><div class="metric-label">Records Preserved</div><div class="metric-val">${ir ? ir.records_preserved + '/' + ir.total_expected : '—'}</div></div>
+        <div class="card"><div class="metric-label">Duplicates / Mismatches</div><div class="metric-val">${ir ? (ir.duplicate_ids.length + ' / ' + ir.amount_mismatches) : '—'}</div></div>
+        <div class="card"><div class="metric-label">Deployment Gate</div><div class="metric-val">${badge(gateStatus)}</div></div>
+      `;
+
+      if (latest) {
+        document.getElementById('overview-latest').innerHTML = `
+          <h3>Latest Verification Result — ${badge(latest.decision)}</h3>
+          <p><b>Run ID:</b> <code>${latest.run_id}</code> | <b>Domain:</b> ${latest.domain} | <b>Migration:</b> <code>${latest.migration_file}</code></p>
+          <p><b>Rollback Classification:</b> <code>${latest.rollback_classification}</code> | <b>Exit Code:</b> <code>${latest.exit_code}</code></p>
+          <p>${latest.reason}</p>
+        `;
+      } else {
+        document.getElementById('overview-latest').innerHTML = `<p>No runs recorded yet. Click any scenario button above to execute a real verification.</p>`;
+      }
+
+      const hist = await (await fetch('/api/history')).json();
+      document.getElementById('history-tbody').innerHTML = hist.map(r => `
+        <tr>
+          <td><code>${r.run_id}</code></td>
+          <td>${r.domain}</td>
+          <td>${r.scenario}</td>
+          <td>${r.engine}</td>
+          <td>${r.fixture_count}</td>
+          <td>${badge(r.decision)}</td>
+          <td><code>${r.rollback_classification}</code></td>
+          <td><button class="btn" onclick='selectReport("${r.run_id}")'>Inspect</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="8">No runs recorded yet.</td></tr>';
+
+      if (currentReport) renderDetailedPanels(currentReport);
+    }
+
+    async function selectReport(runId) {
+      currentReport = await (await fetch(`/api/reports/${runId}`)).json();
+      renderDetailedPanels(currentReport);
+      showTab('reports', document.querySelectorAll('.nav button')[6]);
+    }
+
+    function renderDetailedPanels(r) {
+      // Compatibility panel
+      const c = r.compatibility_report;
+      if (c) {
+        const renderOps = (ops) => ops.map(o => `
+          <tr>
+            <td>${o.name}</td><td>${o.operation_type}</td>
+            <td>${badge(o.passed ? 'PASS' : 'FAIL')}</td>
+            <td>${o.duration_ms} ms</td>
+            <td>${o.error ? `<span style="color:#f87171">${o.error}</span>` : (o.details || '')}</td>
+          </tr>
+        `).join('');
+        document.getElementById('compat-panel').innerHTML = `
+          <h3>Compatibility Test Results — <code>${r.run_id}</code> (${r.domain}, ${r.fixture_count} fixtures)</h3>
+          <p><b>V2 (New App):</b> ${badge(c.v2_result.status)} — ${c.v2_result.summary}</p>
+          <table><thead><tr><th>Operation</th><th>Type</th><th>Status</th><th>Time</th><th>Evidence</th></tr></thead><tbody>${renderOps(c.v2_result.operations)}</tbody></table>
+          <p style="margin-top:1.25rem;"><b>V1 (Rollback Target):</b> ${badge(c.v1_result.status)} — ${c.v1_result.summary}</p>
+          <table><thead><tr><th>Operation</th><th>Type</th><th>Status</th><th>Time</th><th>Evidence</th></tr></thead><tbody>${renderOps(c.v1_result.operations)}</tbody></table>
+        `;
+      }
+
+      // Integrity panel
+      const ir = r.integrity_report;
+      if (ir) {
+        document.getElementById('integrity-panel').innerHTML = `
+          <h3>Transaction / Data Integrity Report — ${badge(ir.status)}</h3>
+          <p>${ir.summary}</p>
+          <div class="grid">
+            <div class="card"><div class="metric-label">Expected / Preserved</div><div class="metric-val">${ir.records_preserved} / ${ir.total_expected}</div></div>
+            <div class="card"><div class="metric-label">Missing IDs</div><div class="metric-val">${ir.missing_ids.length}</div></div>
+            <div class="card"><div class="metric-label">Duplicate IDs</div><div class="metric-val">${ir.duplicate_ids.length}</div></div>
+            <div class="card"><div class="metric-label">Amount Mismatches</div><div class="metric-val">${ir.amount_mismatches}</div></div>
+            <div class="card"><div class="metric-label">Currency Mismatches</div><div class="metric-val">${ir.currency_mismatches}</div></div>
+            <div class="card"><div class="metric-label">NULL Violations</div><div class="metric-val">${ir.null_violations}</div></div>
+          </div>
+        `;
+      } else {
+        document.getElementById('integrity-panel').innerHTML = `<h3>Transaction Integrity</h3><p>Not executed for run <code>${r.run_id}</code>.</p>`;
+      }
+
+      // Gate & Expand-Contract panel
+      const g = r.guidance;
+      document.getElementById('gate-panel').innerHTML = `
+        <h3>Deployment Safety Gate — ${badge(r.decision === 'PASS' ? 'PASS' : 'BLOCKED')} (Exit Code: ${r.exit_code})</h3>
+        <p><b>Rollback Classification:</b> <code>${r.rollback_classification}</code></p>
+        <p>${r.reason}</p>
+        ${g ? `<h4>Expand-and-Contract Guidance (${r.domain})</h4><p style="color:var(--muted)">${g.rationale}</p>` +
+          g.stages.map(s => `<div class="card"><b>${s.stage}: ${s.title}</b><p>${s.description}</p><pre>${s.sql_example}</pre></div>`).join('') : ''}
+      `;
+
+      // Detailed report panel
+      document.getElementById('report-detail-panel').innerHTML = `
+        <h3>Evidence Report — <code>${r.run_id}</code></h3>
+        <div class="btn-row" style="margin-bottom:0.75rem;">
+          <a class="btn" href="/api/reports/${r.run_id}" target="_blank">Download JSON</a>
+          <a class="btn btn-green" href="/api/reports/${r.run_id}/html" target="_blank">Open HTML Evidence Report</a>
+        </div>
+        <pre>${JSON.stringify(r, null, 2)}</pre>
+      `;
+    }
+
+    async function runPreset(preset) {
+      document.getElementById('run-status').textContent = `Running ${preset} against isolated database...`;
+      const resp = await fetch('/api/run-preset', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({preset, fixture_count: 1000})
+      });
+      const data = await resp.json();
+      currentReport = data.runs ? data.runs.scenario_b_safe : data;
+      document.getElementById('run-status').textContent = `Completed ${preset}. Dashboard updated with real backend evidence.`;
+      await refreshAll();
+    }
+
+    async function runLiveScan() {
+      const sql = document.getElementById('scan-sql').value;
+      const data = await (await fetch('/api/scan', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sql, migration_name: 'dashboard_editor.sql'})
+      })).json();
+      document.getElementById('scan-output').innerHTML = `
+        <p><b>Highest Severity:</b> ${badge(data.highest_severity)} | <b>Rollback Class:</b> <code>${data.rollback_classification}</code></p>
+        <table><thead><tr><th>Rule</th><th>Severity</th><th>Line</th><th>Explanation</th><th>Recommendation</th></tr></thead>
+        <tbody>${data.findings.map(f => `<tr><td><code>${f.rule_id}</code></td><td>${badge(f.severity)}</td><td>${f.line_number}</td><td>${f.explanation}</td><td>${f.recommendation}</td></tr>`).join('') || '<tr><td colspan="5">No destructive patterns flagged.</td></tr>'}</tbody></table>
+        <p style="color:var(--muted);font-size:0.82rem;margin-top:0.5rem;">${data.disclaimer}</p>
+      `;
+    }
+
+    async function runLiveVerify() {
+      const sql = document.getElementById('scan-sql').value;
+      const data = await (await fetch('/api/verify', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sql, migration_name: 'dashboard_editor.sql', domain: 'banking', fixture_count: 1000})
+      })).json();
+      currentReport = data;
+      await refreshAll();
+      showTab('gate', document.querySelectorAll('.nav button')[4]);
+    }
+
+    refreshAll();
+  </script>
+</body>
+</html>

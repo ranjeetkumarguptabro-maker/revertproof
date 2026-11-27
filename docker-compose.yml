@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: revertproof-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${RP_DB_NAME:-revertproof_test}
+      POSTGRES_USER: ${RP_DB_USER:-rp_tester}
+      POSTGRES_PASSWORD: ${RP_DB_PASSWORD:-rp_local_dev_only}
+    ports:
+      - "${RP_DB_PORT:-54329}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${RP_DB_USER:-rp_tester} -d ${RP_DB_NAME:-revertproof_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - revertproof_pgdata:/var/lib/postgresql/data
+
+  dashboard:
+    build: .
+    container_name: revertproof-dashboard
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RP_DATABASE_URL: postgresql://${RP_DB_USER:-rp_tester}:${RP_DB_PASSWORD:-rp_local_dev_only}@db:5432/${RP_DB_NAME:-revertproof_test}
+      RP_REPORT_DIR: /app/reports
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./reports:/app/reports
+
+volumes:
+  revertproof_pgdata:

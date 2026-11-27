@@ -1,0 +1,406 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  RevertProof — Database-Aware Deployment Rollback Verification Platform.
+  Provisions an isolated private VPC, private Amazon RDS for PostgreSQL 16 (encrypted + TLS),
+  AWS Secrets Manager credentials, encrypted Amazon S3 evidence bucket, VPC-attached AWS CodeBuild
+  safety gate, AWS CodePipeline, and Amazon CloudWatch Logs + Failure Alarm.
+  NEVER connect this stack to a production database.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: revertproof
+  GitHubRepoOwner:
+    Type: String
+    Default: your-github-username
+  GitHubRepoName:
+    Type: String
+    Default: revertproof
+  GitHubBranch:
+    Type: String
+    Default: main
+  CodeStarConnectionArn:
+    Type: String
+    Default: arn:aws:codestar-connections:us-east-1:123456789012:connection/replace-me
+    Description: AWS CodeConnections ARN for GitHub source stage
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+    Description: Small isolated test RDS instance (remember to stop/delete after hackathon demo)
+
+Resources:
+  # ------------------------------------------------------------------
+  # 1. Isolated VPC & Private Subnets (RDS is NEVER publicly accessible)
+  # ------------------------------------------------------------------
+  RevertProofVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.42.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-isolated-vpc'
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref RevertProofVPC
+      CidrBlock: 10.42.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-private-a'
+
+  PrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref RevertProofVPC
+      CidrBlock: 10.42.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-private-b'
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref RevertProofVPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-private-rt'
+
+  PrivateSubnetAAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnetBAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+
+  # Security Groups: Least-privilege ingress (only CodeBuild SG -> RDS:5432)
+  CodeBuildSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: RevertProof CodeBuild runner egress only
+      VpcId: !Ref RevertProofVPC
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 10.42.0.0/16
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow PostgreSQL 5432 ONLY from RevertProof CodeBuild SG
+      VpcId: !Ref RevertProofVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref CodeBuildSecurityGroup
+
+  # ------------------------------------------------------------------
+  # 2. AWS Secrets Manager — Isolated Test DB Credentials
+  # ------------------------------------------------------------------
+  TestDBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${ProjectName}/test-db-credentials'
+      Description: Isolated synthetic-only PostgreSQL test credentials for RevertProof
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"rp_tester","dbname":"revertproof_test"}'
+        GenerateStringKey: password
+        PasswordLength: 28
+        ExcludeCharacters: '"@/\'
+
+  # ------------------------------------------------------------------
+  # 3. Private Amazon RDS for PostgreSQL 16 (Encrypted + TLS Enforced)
+  # ------------------------------------------------------------------
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private subnets for RevertProof test RDS
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+
+  DBParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: Enforce TLS (rds.force_ssl=1) for RevertProof test PostgreSQL
+      Family: postgres16
+      Parameters:
+        rds.force_ssl: '1'
+
+  IsolatedTestRDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub '${ProjectName}-test-pg'
+      Engine: postgres
+      EngineVersion: '16.4'
+      DBInstanceClass: !Ref DBInstanceClass
+      AllocatedStorage: 20
+      StorageType: gp3
+      StorageEncrypted: true
+      PubliclyAccessible: false
+      DBName: revertproof_test
+      MasterUsername: '{{resolve:secretsmanager:revertproof/test-db-credentials:SecretString:username}}'
+      MasterUserPassword: '{{resolve:secretsmanager:revertproof/test-db-credentials:SecretString:password}}'
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      DBParameterGroupName: !Ref DBParameterGroup
+      BackupRetentionPeriod: 1
+      DeletionProtection: false
+      AutoMinorVersionUpgrade: true
+    DependsOn: TestDBSecret
+
+  # ------------------------------------------------------------------
+  # 4. Amazon S3 — Encrypted Evidence Reports Bucket
+  # ------------------------------------------------------------------
+  EvidenceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldEvidenceAfter30Days
+            Status: Enabled
+            ExpirationInDays: 30
+
+  EvidenceBucketTLSOnlyPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref EvidenceBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt EvidenceBucket.Arn
+              - !Sub '${EvidenceBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  # ------------------------------------------------------------------
+  # 5. Amazon CloudWatch Logs & Deployment Blocked Alarm
+  # ------------------------------------------------------------------
+  CodeBuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/codebuild/${ProjectName}-safety-gate'
+      RetentionInDays: 14
+
+  DeploymentBlockedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-deployment-blocked'
+      AlarmDescription: Triggers when RevertProof blocks an unsafe database migration
+      Namespace: RevertProof
+      MetricName: DeploymentBlocked
+      Dimensions:
+        - Name: Domain
+          Value: banking
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  # ------------------------------------------------------------------
+  # 6. AWS CodeBuild — Least-Privilege Safety Gate Runner
+  # ------------------------------------------------------------------
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: RevertProofLeastPrivilege
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub '${CodeBuildLogGroup.Arn}:*'
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref TestDBSecret
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource: !Sub '${EvidenceBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    cloudwatch:namespace: RevertProof
+              - Effect: Allow
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeVpcs
+                  - ec2:CreateNetworkInterfacePermission
+                Resource: '*'
+
+  SafetyGateCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub '${ProjectName}-safety-gate'
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        EnvironmentVariables:
+          - Name: RP_AWS_SECRET_ID
+            Value: !Ref TestDBSecret
+          - Name: RP_AWS_S3_BUCKET
+            Value: !Ref EvidenceBucket
+          - Name: RP_AWS_REGION
+            Value: !Ref AWS::Region
+          - Name: RP_MIGRATION_FILE
+            Value: sql/safe_expand.sql
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yml
+      VpcConfig:
+        VpcId: !Ref RevertProofVPC
+        Subnets:
+          - !Ref PrivateSubnetA
+          - !Ref PrivateSubnetB
+        SecurityGroupIds:
+          - !Ref CodeBuildSecurityGroup
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref CodeBuildLogGroup
+
+  # ------------------------------------------------------------------
+  # 7. AWS CodePipeline — Source -> RevertProof Safety Gate -> Approval
+  # ------------------------------------------------------------------
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: RevertProofPipelinePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !GetAtt EvidenceBucket.Arn
+                  - !Sub '${EvidenceBucket.Arn}/*'
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuilds
+                Resource: !GetAtt SafetyGateCodeBuild.Arn
+              - Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource: !Ref CodeStarConnectionArn
+
+  RevertProofPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub '${ProjectName}-deployment-gate'
+      RoleArn: !GetAtt PipelineRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: !Ref EvidenceBucket
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: GitHubSource
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: '1'
+              Configuration:
+                ConnectionArn: !Ref CodeStarConnectionArn
+                FullRepositoryId: !Sub '${GitHubRepoOwner}/${GitHubRepoName}'
+                BranchName: !Ref GitHubBranch
+              OutputArtifacts:
+                - Name: SourceOutput
+        - Name: RevertProofVerificationGate
+          Actions:
+            - Name: RunCompatibilityAndIntegrityChecks
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: EvidenceOutput
+              Configuration:
+                ProjectName: !Ref SafetyGateCodeBuild
+
+Outputs:
+  EvidenceBucketName:
+    Value: !Ref EvidenceBucket
+  TestDBSecretArn:
+    Value: !Ref TestDBSecret
+  RDSEndpoint:
+    Value: !GetAtt IsolatedTestRDS.Endpoint.Address
+  CodeBuildProjectName:
+    Value: !Ref SafetyGateCodeBuild
+  PipelineName:
+    Value: !Ref RevertProofPipeline
