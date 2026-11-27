@@ -1597,6 +1597,95 @@
       color: #111614;
     }
 
+    /* Architecture Review & Remediation Section */
+    .war-card {
+      margin-top: 26px;
+      background: #FFFFFF;
+      border: 1.5px solid #CFE3D6;
+      border-radius: 20px;
+      padding: 28px 28px 26px;
+      box-shadow: 0 8px 26px rgba(11, 93, 59, 0.045);
+    }
+    .war-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .war-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #0B0D0C;
+      margin-bottom: 4px;
+    }
+    .war-sub {
+      font-size: 0.9rem;
+      color: #5C615E;
+    }
+    .war-status-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: #FFFBEB;
+      color: #B45309;
+      border: 1px solid #FDE68A;
+      padding: 6px 14px;
+      border-radius: 999px;
+    }
+    .war-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+    }
+    .war-step {
+      background: #F8FBF9;
+      border: 1px solid #DCECE2;
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .war-step-num {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #0B0D0C;
+    }
+    .war-step-num .num-badge {
+      width: 26px;
+      height: 26px;
+      font-size: 0.72rem;
+    }
+    .war-step p {
+      font-size: 0.8rem;
+      color: #464B48;
+      line-height: 1.45;
+    }
+    .war-slot {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.69rem;
+      color: #0B5D3B;
+      background: #E9F7EE;
+      border: 1px dashed #9FDAB4;
+      border-radius: 8px;
+      padding: 7px 9px;
+      line-height: 1.4;
+    }
+    .war-slot a {
+      color: #0B5D3B;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
     /* Section 5 — Production Scale & Interactive Chart */
     .scale-divider {
       height: 1px;
@@ -1817,6 +1906,7 @@
       .example-grid, .pipeline-grid, .scale-grid, .chart-body, .ba-compare-grid { grid-template-columns: 1fr; gap: 18px; }
       .ba-arrow { transform: rotate(90deg); height: 34px; }
       .ba-metrics-grid, .ba-dl-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .war-grid { grid-template-columns: 1fr; }
       .ba-metric { border-right: none; margin-right: 0; }
       .pipe-connector-col, .feedback-svg-wrap svg { display: none; }
       .step-dash { display: none; }
@@ -2530,6 +2620,53 @@
             <tr><td>Dual-Write Sync</td><td>✓ PASS</td><td>0.07</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Architecture Review & Remediation (Hackathon Official Skill Evidence Section) -->
+      <div id="architecture-review" class="war-card">
+        <div class="war-head">
+          <div>
+            <div class="war-title">Architecture Review &amp; Remediation</div>
+            <div class="war-sub">Official review evidence &mdash; add after running the official AWS Agent Toolkit <code>aws-well-architected-review</code> skill</div>
+          </div>
+          <span class="war-status-pill">PENDING OFFICIAL SKILL RUN</span>
+        </div>
+
+        <div class="war-grid">
+          <div class="war-step">
+            <div class="war-step-num"><span class="num-badge">01</span> Original finding</div>
+            <p>Show the exact Reliability Pillar issue identified by the official AWS Agent Toolkit review.</p>
+            <div class="war-slot">Awaiting verbatim output:<br/><code>docs/well-architected-before.md</code></div>
+          </div>
+
+          <div class="war-step">
+            <div class="war-step-num"><span class="num-badge">02</span> Recommendation selected</div>
+            <p>Show the original AWS recommendation and why it matters to RevertProof's deployment safety architecture.</p>
+            <div class="war-slot">Awaiting selected Reliability Pillar finding ID &amp; rationale.</div>
+          </div>
+
+          <div class="war-step">
+            <div class="war-step-num"><span class="num-badge">03</span> Implemented change</div>
+            <p>Show the actual code, CloudFormation infrastructure, and architecture changes applied.</p>
+            <div class="war-slot">Target IaC:<br/><code>infra/cloudformation/revertproof-stack.yaml</code></div>
+          </div>
+
+          <div class="war-step">
+            <div class="war-step-num"><span class="num-badge">04</span> Before vs After</div>
+            <p>Compare the original failure scenario with the verified improved post-remediation result.</p>
+            <div class="war-slot">Awaiting measured AWS before &amp; after comparison.</div>
+          </div>
+
+          <div class="war-step">
+            <div class="war-step-num"><span class="num-badge">05</span> Verification evidence</div>
+            <p>Link actual test reports, Git commit history, and pre/post assessment outputs.</p>
+            <div class="war-slot">
+              <a href="https://github.com/ranjeetkumarguptabro-maker/revertproof/commits/main" target="_blank">Git Commits</a> &bull;
+              <a href="/api/evidence/after-safe.json" target="_blank">JSON Report</a> &bull;
+              <a href="/app">Workspace</a>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="ba-footer">
