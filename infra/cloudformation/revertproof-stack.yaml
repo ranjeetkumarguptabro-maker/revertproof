@@ -12,7 +12,7 @@ Parameters:
     Default: revertproof
   GitHubRepoOwner:
     Type: String
-    Default: your-github-username
+    Default: ranjeetkumarguptabro-maker
   GitHubRepoName:
     Type: String
     Default: revertproof
@@ -21,12 +21,15 @@ Parameters:
     Default: main
   CodeStarConnectionArn:
     Type: String
-    Default: arn:aws:codestar-connections:us-east-1:123456789012:connection/replace-me
-    Description: AWS CodeConnections ARN for GitHub source stage
+    Default: ''
+    Description: Optional AWS CodeConnections ARN for GitHub CodePipeline stage
   DBInstanceClass:
     Type: String
     Default: db.t4g.micro
     Description: Small isolated test RDS instance (remember to stop/delete after hackathon demo)
+
+Conditions:
+  HasCodeStarConnection: !Not [!Equals [!Ref CodeStarConnectionArn, '']]
 
 Resources:
   # ------------------------------------------------------------------
@@ -149,15 +152,15 @@ Resources:
     Properties:
       DBInstanceIdentifier: !Sub '${ProjectName}-test-pg'
       Engine: postgres
-      EngineVersion: '16.4'
+      EngineVersion: '16'
       DBInstanceClass: !Ref DBInstanceClass
       AllocatedStorage: 20
       StorageType: gp3
       StorageEncrypted: true
       PubliclyAccessible: false
       DBName: revertproof_test
-      MasterUsername: '{{resolve:secretsmanager:revertproof/test-db-credentials:SecretString:username}}'
-      MasterUserPassword: '{{resolve:secretsmanager:revertproof/test-db-credentials:SecretString:password}}'
+      MasterUsername: !Sub '{{resolve:secretsmanager:${TestDBSecret}:SecretString:username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${TestDBSecret}:SecretString:password}}'
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
       DBSubnetGroupName: !Ref DBSubnetGroup
@@ -290,7 +293,7 @@ Resources:
       Name: !Sub '${ProjectName}-safety-gate'
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
-        Type: CODEPIPELINE
+        Type: !If [HasCodeStarConnection, CODEPIPELINE, NO_ARTIFACTS]
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
@@ -305,7 +308,11 @@ Resources:
           - Name: RP_MIGRATION_FILE
             Value: sql/safe_expand.sql
       Source:
-        Type: CODEPIPELINE
+        Type: !If [HasCodeStarConnection, CODEPIPELINE, GITHUB]
+        Location: !If
+          - HasCodeStarConnection
+          - !Ref AWS::NoValue
+          - !Sub 'https://github.com/${GitHubRepoOwner}/${GitHubRepoName}.git'
         BuildSpec: buildspec.yml
       VpcConfig:
         VpcId: !Ref RevertProofVPC
@@ -324,6 +331,7 @@ Resources:
   # ------------------------------------------------------------------
   PipelineRole:
     Type: AWS::IAM::Role
+    Condition: HasCodeStarConnection
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -357,6 +365,7 @@ Resources:
 
   RevertProofPipeline:
     Type: AWS::CodePipeline::Pipeline
+    Condition: HasCodeStarConnection
     Properties:
       Name: !Sub '${ProjectName}-deployment-gate'
       RoleArn: !GetAtt PipelineRole.Arn
@@ -403,4 +412,5 @@ Outputs:
   CodeBuildProjectName:
     Value: !Ref SafetyGateCodeBuild
   PipelineName:
+    Condition: HasCodeStarConnection
     Value: !Ref RevertProofPipeline

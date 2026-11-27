@@ -182,10 +182,14 @@ class DatabaseAdapter:
     def fetchall(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         assert self._conn is not None
         if self.is_postgres:
-            with self._conn.cursor() as cur:
-                cur.execute(sql, params)
-                cols = [desc[0] for desc in (cur.description or [])]
-                return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
+            try:
+                with self._conn.cursor() as cur:
+                    cur.execute(sql, params)
+                    cols = [desc[0] for desc in (cur.description or [])]
+                    return [dict(zip(cols, row, strict=False)) for row in cur.fetchall()]
+            except Exception:
+                self._conn.rollback()
+                raise
         else:
             q = sql.replace("%s", "?")
             cur = self._conn.execute(q, params)
