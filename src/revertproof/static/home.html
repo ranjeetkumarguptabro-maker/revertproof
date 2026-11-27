@@ -969,11 +969,100 @@
       box-shadow: 0 0 10px rgba(140, 234, 179, 0.65);
     }
 
+    .pipeline-stage-wrap {
+      position: relative;
+      padding-bottom: 66px;
+    }
+
     .pipeline-grid {
       display: grid;
-      grid-template-columns: 1fr 1.15fr 1.25fr 1fr;
-      gap: 22px;
+      grid-template-columns: 1fr 48px 1.15fr 44px 1.25fr 44px 1fr;
+      gap: 0;
       align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .pipe-connector-col {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+    .pipe-connector-col svg {
+      width: 100%;
+      height: 220px;
+      overflow: visible;
+    }
+
+    .flow-line {
+      stroke: #466556;
+      stroke-width: 1.8;
+      fill: none;
+    }
+    .flow-pulse {
+      stroke: #8CEAB3;
+      stroke-width: 2.4;
+      fill: none;
+      stroke-dasharray: 10 18;
+      animation: pipeFlow 1.6s linear infinite;
+      filter: drop-shadow(0 0 4px rgba(140, 234, 179, 0.75));
+    }
+    .flow-pulse-reverse {
+      stroke: #8CEAB3;
+      stroke-width: 2;
+      fill: none;
+      stroke-dasharray: 7 14;
+      animation: pipeFlowReverse 2.2s linear infinite;
+      filter: drop-shadow(0 0 4px rgba(140, 234, 179, 0.7));
+    }
+    .glow-node {
+      fill: #8CEAB3;
+      filter: drop-shadow(0 0 6px rgba(140, 234, 179, 0.95));
+      animation: nodePulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pipeFlow {
+      from { stroke-dashoffset: 28; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes pipeFlowReverse {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: 21; }
+    }
+    @keyframes nodePulse {
+      0%, 100% { opacity: 0.75; }
+      50% { opacity: 1; }
+    }
+
+    .feedback-svg-wrap {
+      position: relative;
+      height: 68px;
+      margin-top: -10px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .feedback-svg-wrap svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .feedback-pill {
+      position: relative;
+      z-index: 2;
+      border: 1.5px solid #8CEAB3;
+      color: #E6F8ED;
+      background: #0D1512;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 9px 22px;
+      border-radius: 999px;
+      box-shadow: 0 0 20px rgba(140, 234, 179, 0.14);
     }
 
     .pipe-box {
@@ -1324,7 +1413,8 @@
     }
 
     @media (max-width: 1040px) {
-      .example-grid, .pipeline-grid, .scale-grid, .chart-body { grid-template-columns: 1fr; }
+      .example-grid, .pipeline-grid, .scale-grid, .chart-body { grid-template-columns: 1fr; gap: 18px; }
+      .pipe-connector-col, .feedback-svg-wrap svg { display: none; }
       .step-dash { display: none; }
       .stepper-row { gap: 10px; }
     }
@@ -1719,91 +1809,150 @@
           <span class="step-pill-dark">DEPLOY</span>
         </div>
 
-        <div class="pipeline-grid">
-          <!-- INPUTS -->
-          <div class="pipe-box">
-            <div class="pipe-box-title">⛁ INPUTS</div>
-            <div class="pipe-item">
-              <div class="pipe-item-left">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.11.79-.25.79-.56v-2.02c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
-                <div><div class="pipe-item-title">GitHub PR</div><div class="pipe-item-sub">Migration &amp; code changes</div></div>
+        <div class="pipeline-stage-wrap">
+          <div class="pipeline-grid">
+            <!-- INPUTS -->
+            <div class="pipe-box">
+              <div class="pipe-box-title">⛁ INPUTS</div>
+              <div class="pipe-item">
+                <div class="pipe-item-left">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.11.79-.25.79-.56v-2.02c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+                  <div><div class="pipe-item-title">GitHub PR</div><div class="pipe-item-sub">Migration &amp; code changes</div></div>
+                </div>
+              </div>
+              <div class="pipe-item">
+                <div class="pipe-item-left">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8CEAB3" stroke-width="1.9"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
+                  <div><div class="pipe-item-title">Databases</div><div class="pipe-item-sub">PostgreSQL / SQLite</div></div>
+                </div>
+              </div>
+              <div class="pipe-item">
+                <div class="pipe-item-left">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8CEAB3" stroke-width="1.9"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></svg>
+                  <div><div class="pipe-item-title">Applications</div><div class="pipe-item-sub">V1 (current) + V2 (new)</div></div>
+                </div>
               </div>
             </div>
-            <div class="pipe-item">
-              <div class="pipe-item-left">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8CEAB3" stroke-width="1.9"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8v-13M5 12c0 1.5 3.1 2.8 7 2.8s7-1.3 7-2.8"/></svg>
-                <div><div class="pipe-item-title">Databases</div><div class="pipe-item-sub">PostgreSQL / SQLite</div></div>
+
+            <!-- ANIMATED CONNECTOR 1: 3 Inputs merge into Engine -->
+            <div class="pipe-connector-col" aria-hidden="true">
+              <svg viewBox="0 0 48 220" preserveAspectRatio="none">
+                <path class="flow-line" d="M 0 42 C 20 42, 20 110, 48 110" />
+                <path class="flow-line" d="M 0 110 L 48 110" />
+                <path class="flow-line" d="M 0 178 C 20 178, 20 110, 48 110" />
+                <path class="flow-pulse" d="M 0 42 C 20 42, 20 110, 48 110" />
+                <path class="flow-pulse" d="M 0 110 L 48 110" />
+                <path class="flow-pulse" d="M 0 178 C 20 178, 20 110, 48 110" />
+                <circle class="glow-node" cx="26" cy="110" r="4" />
+                <circle class="glow-node" cx="46" cy="110" r="3.5" />
+              </svg>
+            </div>
+
+            <!-- REVERTPROOF ENGINE CENTER -->
+            <div class="engine-center-card">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 3L35 11.5V28.5L20 37L5 28.5V11.5L20 3Z" fill="#0B1912" stroke="#0B1912" stroke-width="2"/><path d="M20 11L27 14V20.5C27 24.8 24 28.2 20 29.5C16 28.2 13 24.8 13 20.5V14L20 11Z" fill="#E2FBEB"/></svg>
+              <h3>REVERTPROOF</h3>
+              <div class="sub">Migration Safety Engine</div>
+              <div class="engine-checklist">
+                <div>✓ Analyze migration risk</div>
+                <div>✓ Test V1 &amp; V2 compatibility</div>
+                <div>✓ Verify data integrity</div>
+                <div>✓ Evaluate rollback safety</div>
               </div>
             </div>
-            <div class="pipe-item">
-              <div class="pipe-item-left">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8CEAB3" stroke-width="1.9"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></svg>
-                <div><div class="pipe-item-title">Applications</div><div class="pipe-item-sub">V1 (current) + V2 (new)</div></div>
+
+            <!-- ANIMATED CONNECTOR 2: Engine -> Verification -->
+            <div class="pipe-connector-col" aria-hidden="true">
+              <svg viewBox="0 0 44 220" preserveAspectRatio="none">
+                <path class="flow-line" d="M 0 110 L 44 110" />
+                <path class="flow-pulse" d="M 0 110 L 44 110" />
+                <circle class="glow-node" cx="14" cy="110" r="3.8" />
+                <circle class="glow-node" cx="30" cy="110" r="3.8" />
+              </svg>
+            </div>
+
+            <!-- VERIFICATION -->
+            <div class="pipe-box">
+              <div class="pipe-box-title">⚗ VERIFICATION</div>
+              <div class="pipe-item">
+                <div class="pipe-item-left">
+                  <span style="color:#8CEAB3;font-family:'JetBrains Mono',monospace;font-weight:700;">&lt;/&gt;</span>
+                  <div><div class="pipe-item-title">Compatibility</div><div class="pipe-item-sub">V1 &amp; V2 on migrated DB</div></div>
+                </div>
+                <span class="pass-badge-dark">PASS</span>
+              </div>
+              <div class="pipe-item">
+                <div class="pipe-item-left">
+                  <span style="color:#8CEAB3;">⛁</span>
+                  <div><div class="pipe-item-title">Data Integrity</div><div class="pipe-item-sub">Transactions, amounts, currency</div></div>
+                </div>
+                <span class="pass-badge-dark">PASS</span>
+              </div>
+              <div class="pipe-item">
+                <div class="pipe-item-left">
+                  <span style="color:#8CEAB3;">↩</span>
+                  <div><div class="pipe-item-title">Rollback Test</div><div class="pipe-item-sub">Revert to V1 successfully</div></div>
+                </div>
+                <span class="pass-badge-dark">PASS</span>
+              </div>
+            </div>
+
+            <!-- ANIMATED CONNECTOR 3: Verification -> Deployment Gate (curved up to APPROVED) -->
+            <div class="pipe-connector-col" aria-hidden="true">
+              <svg viewBox="0 0 44 220" preserveAspectRatio="none">
+                <path class="flow-line" d="M 0 110 C 22 110, 22 68, 44 68" />
+                <path class="flow-pulse" d="M 0 110 C 22 110, 22 68, 44 68" />
+                <circle class="glow-node" cx="2" cy="110" r="3.5" />
+                <circle class="glow-node" cx="42" cy="68" r="3.8" />
+              </svg>
+            </div>
+
+            <!-- DEPLOYMENT GATE -->
+            <div class="pipe-box">
+              <div class="pipe-box-title">🚀 DEPLOYMENT GATE</div>
+              <div class="gate-approved-pill">✓ APPROVED</div>
+              <div class="gate-checklist">
+                <div>✓ Safe to deploy</div>
+                <div>✓ Rollback verified</div>
+                <div>✓ Test report (JSON)</div>
+                <div>✓ Stored in AWS S3</div>
+              </div>
+              <div class="gate-icons-row">
+                <!-- GitHub Logo -->
+                <div class="gate-icon-tile" title="GitHub">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.11.79-.25.79-.56v-2.02c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.18-3.08-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+                </div>
+                <!-- AWS Logo with Smile Arrow -->
+                <div class="gate-icon-tile" title="Amazon Web Services">
+                  <svg width="36" height="24" viewBox="0 0 64 40" fill="none">
+                    <text x="32" y="21" text-anchor="middle" fill="#FFFFFF" font-family="Space Grotesk, sans-serif" font-weight="700" font-size="18">aws</text>
+                    <path d="M12 27 C 24 35, 42 35, 52 27" stroke="#FF9900" stroke-width="3" stroke-linecap="round" fill="none"/>
+                    <path d="M47 25 L 54 27 L 50 33" stroke="#FF9900" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                </div>
+                <!-- PostgreSQL Elephant Logo -->
+                <div class="gate-icon-tile" title="PostgreSQL">
+                  <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                    <path d="M22.5 9.5C20.8 7 17.5 6 14.5 6.8C11.2 5.8 7.5 7.4 6.5 10.8C5.6 13.8 6.8 18.5 9.5 21C11 22.3 12.6 22.2 13.6 21.3C14 23.8 15.2 26 17.2 26C19 26 19.6 24.4 19.6 22.8C22 22 24.8 19 25.2 15C25.5 12.6 24.2 10.6 22.5 9.5Z" fill="#336791" stroke="#93C5FD" stroke-width="1.5"/>
+                    <circle cx="19.5" cy="12.5" r="1.3" fill="#FFFFFF"/>
+                    <path d="M15.5 16.5C15.5 19.5 16.2 22.5 17.4 23.5" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M10.5 10.5C9.2 12.5 9.2 16 10.8 18" stroke="#BFDBFE" stroke-width="1.4" stroke-linecap="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- REVERTPROOF ENGINE CENTER -->
-          <div class="engine-center-card">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><path d="M20 3L35 11.5V28.5L20 37L5 28.5V11.5L20 3Z" fill="#0B1912" stroke="#0B1912" stroke-width="2"/><path d="M20 11L27 14V20.5C27 24.8 24 28.2 20 29.5C16 28.2 13 24.8 13 20.5V14L20 11Z" fill="#E2FBEB"/></svg>
-            <h3>REVERTPROOF</h3>
-            <div class="sub">Migration Safety Engine</div>
-            <div class="engine-checklist">
-              <div>✓ Analyze migration risk</div>
-              <div>✓ Test V1 &amp; V2 compatibility</div>
-              <div>✓ Verify data integrity</div>
-              <div>✓ Evaluate rollback safety</div>
-            </div>
+          <!-- ANIMATED CONTINUOUS FEEDBACK LOOP: Deployment Gate -> Engine -->
+          <div class="feedback-svg-wrap">
+            <svg viewBox="0 0 1200 68" preserveAspectRatio="none">
+              <path class="flow-line" d="M 1070 0 L 1070 36 Q 1070 48 1054 48 L 416 48 Q 400 48 400 36 L 400 0" stroke-dasharray="6 8" />
+              <path class="flow-pulse-reverse" d="M 1070 0 L 1070 36 Q 1070 48 1054 48 L 416 48 Q 400 48 400 36 L 400 0" />
+              <circle class="glow-node" cx="1070" cy="4" r="3.8" />
+              <circle class="glow-node" cx="400" cy="4" r="3.8" />
+            </svg>
+            <div class="feedback-pill">↻ CONTINUOUS FEEDBACK</div>
           </div>
-
-          <!-- VERIFICATION -->
-          <div class="pipe-box">
-            <div class="pipe-box-title">⚗ VERIFICATION</div>
-            <div class="pipe-item">
-              <div class="pipe-item-left">
-                <span style="color:#8CEAB3;font-family:'JetBrains Mono',monospace;font-weight:700;">&lt;/&gt;</span>
-                <div><div class="pipe-item-title">Compatibility</div><div class="pipe-item-sub">V1 &amp; V2 on migrated DB</div></div>
-              </div>
-              <span class="pass-badge-dark">PASS</span>
-            </div>
-            <div class="pipe-item">
-              <div class="pipe-item-left">
-                <span style="color:#8CEAB3;">⛁</span>
-                <div><div class="pipe-item-title">Data Integrity</div><div class="pipe-item-sub">Transactions, amounts, currency</div></div>
-              </div>
-              <span class="pass-badge-dark">PASS</span>
-            </div>
-            <div class="pipe-item">
-              <div class="pipe-item-left">
-                <span style="color:#8CEAB3;">↩</span>
-                <div><div class="pipe-item-title">Rollback Test</div><div class="pipe-item-sub">Revert to V1 successfully</div></div>
-              </div>
-              <span class="pass-badge-dark">PASS</span>
-            </div>
-          </div>
-
-          <!-- DEPLOYMENT GATE -->
-          <div class="pipe-box">
-            <div class="pipe-box-title">🚀 DEPLOYMENT GATE</div>
-            <div class="gate-approved-pill">✓ APPROVED</div>
-            <div class="gate-checklist">
-              <div>✓ Safe to deploy</div>
-              <div>✓ Rollback verified</div>
-              <div>✓ Test report (JSON)</div>
-              <div>✓ Stored in AWS S3</div>
-            </div>
-            <div class="gate-icons-row">
-              <div class="gate-icon-tile">GitHub</div>
-              <div class="gate-icon-tile" style="color:#FBBF24;">aws</div>
-              <div class="gate-icon-tile" style="color:#60A5FA;">PG 16</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="feedback-loop">
-          <div class="feedback-line"></div>
-          <div class="feedback-pill">↻ CONTINUOUS FEEDBACK</div>
-          <div class="feedback-line"></div>
         </div>
       </section>
 
