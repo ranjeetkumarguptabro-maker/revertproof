@@ -46,9 +46,9 @@
       background-size: 16px 16px, 120px 120px;
     }
 
-    /* ================= FLOATING PILL NAVBAR ================= */
+    /* ================= FLOATING PILL NAVBAR (SCROLLS WITH TOP OF PAGE) ================= */
     .navbar {
-      position: fixed;
+      position: absolute;
       top: 22px;
       left: 0;
       right: 0;
@@ -118,14 +118,13 @@
 
     /* ================= HERO SECTION ================= */
     .hero {
-      min-height: 100vh;
       max-width: 1280px;
       margin: 0 auto;
-      padding: 136px 28px 42px;
+      padding: 124px 28px 36px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       text-align: center;
     }
 
@@ -273,25 +272,25 @@
     /* ================= STICKY 5-CARD SCROLL WORKFLOW (2 VISIBLE -> SCROLL REVEALS NEXT 3) ================= */
     .workflow-scroll-zone {
       position: relative;
-      height: 360vh; /* Slow, controlled scroll distance through all 5 cards */
+      height: 240vh; /* Clean controlled scroll distance without excess whitespace */
+      margin-top: 28px;
     }
 
     .workflow-sticky {
       position: sticky;
-      top: 0;
-      height: 100vh;
+      top: 56px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       overflow: hidden;
-      padding: 84px 0 36px;
+      padding: 20px 0 24px;
     }
 
     .workflow-viewport {
       width: 100%;
-      max-width: 1060px; /* Sized so exactly 2 cards + 1 arrow fill the focal frame cleanly */
+      max-width: 976px; /* Exact width for 2 cards (440*2) + 1 arrow (64) + 32px padding: zero peeking of card 03 */
       margin: 0 auto;
-      padding: 0 36px;
+      padding: 0 16px;
       overflow: hidden;
     }
 
@@ -630,7 +629,7 @@
     /* ================= SECTION 3: REAL-WORLD EXAMPLE (BEFORE vs WITH REVERTPROOF vs RESULT) ================= */
     .example-section {
       max-width: 1220px;
-      margin: 56px auto 96px;
+      margin: 40px auto 80px;
       padding: 0 28px;
     }
 
@@ -1915,6 +1914,7 @@
 
   <script>
     const scrollZone = document.getElementById('workflow');
+    const stickyEl = scrollZone.querySelector('.workflow-sticky');
     const viewport = document.getElementById('wf-viewport');
     const track = document.getElementById('wf-track');
     const dots = Array.from(document.querySelectorAll('.wf-dot'));
@@ -1922,11 +1922,11 @@
 
     function updateHorizontalScroll() {
       const rect = scrollZone.getBoundingClientRect();
-      const scrollable = scrollZone.offsetHeight - window.innerHeight;
-      if (scrollable <= 0) return;
+      const stickyOffset = 56;
+      const scrollable = Math.max(1, scrollZone.offsetHeight - stickyEl.offsetHeight - stickyOffset);
 
-      const progress = Math.min(1, Math.max(0, -rect.top / scrollable));
-      const maxShift = Math.max(0, track.scrollWidth - viewport.clientWidth + 72);
+      const progress = Math.min(1, Math.max(0, (stickyOffset - rect.top) / scrollable));
+      const maxShift = Math.max(0, track.scrollWidth - (viewport.clientWidth - 32));
       const shift = progress * maxShift;
       track.style.transform = `translate3d(${-shift}px, 0, 0)`;
 
@@ -1938,13 +1938,14 @@
       } else if (progress < 0.92) {
         hint.textContent = 'Revealing upcoming workflow stages — keep scrolling';
       } else {
-        hint.textContent = 'All 5 stages viewed — continue scrolling to launch RevertProof';
+        hint.textContent = 'All 5 stages viewed — continue scrolling';
       }
     }
 
     function scrollToStep(idx) {
-      const scrollable = scrollZone.offsetHeight - window.innerHeight;
-      const targetY = scrollZone.offsetTop + (idx / (dots.length - 1)) * scrollable;
+      const stickyOffset = 56;
+      const scrollable = Math.max(1, scrollZone.offsetHeight - stickyEl.offsetHeight - stickyOffset);
+      const targetY = scrollZone.offsetTop - stickyOffset + (idx / (dots.length - 1)) * scrollable;
       window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
 
