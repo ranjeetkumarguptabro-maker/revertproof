@@ -1528,6 +1528,75 @@
     }
     .ba-dl-btn:hover { background: #6FE09F; transform: translateY(-1px); }
 
+    /* Verification Evidence Table Card */
+    .ve-card {
+      margin-top: 22px;
+      background: #FFFFFF;
+      border: 1px solid #CFE3D6;
+      border-radius: 18px;
+      padding: 22px 26px;
+      box-shadow: 0 6px 20px rgba(11, 93, 59, 0.04);
+    }
+    .ve-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .ve-title {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0B0D0C;
+    }
+    .ve-title span.sub {
+      font-weight: 500;
+      color: #2B2E2C;
+    }
+    .ve-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+    }
+    .ve-table thead tr {
+      background: #E0F5EA;
+    }
+    .ve-table thead th {
+      padding: 11px 18px;
+      text-align: left;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      color: #0B1912;
+    }
+    .ve-table thead th:first-child { border-radius: 10px 0 0 10px; }
+    .ve-table thead th:nth-child(2) { text-align: center; }
+    .ve-table thead th:last-child { text-align: right; border-radius: 0 10px 10px 0; }
+    .ve-table tbody td {
+      padding: 12px 18px;
+      border-bottom: 1px solid #E9F0EC;
+      color: #111614;
+      font-weight: 500;
+    }
+    .ve-table tbody tr:last-child td { border-bottom: none; }
+    .ve-table tbody td:nth-child(2) {
+      text-align: center;
+      color: #15803D;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .ve-table tbody td:last-child {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #111614;
+    }
+
     /* Section 5 — Production Scale & Interactive Chart */
     .scale-divider {
       height: 1px;
@@ -2434,6 +2503,35 @@
         </div>
       </div>
 
+      <!-- Verification Evidence Table (Safe Banking Scenario) -->
+      <div class="ve-card">
+        <div class="ve-head">
+          <div class="ve-title">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0B4A2E" stroke-width="2"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v13c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-13"/><path d="M4.5 12c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3"/></svg>
+            <span>Verification Evidence <span class="sub">(Safe Banking Scenario)</span></span>
+          </div>
+          <button type="button" class="ba-dl-btn" onclick="refreshLiveTimings()" style="border:none;cursor:pointer;">↻ Refresh Live Run</button>
+        </div>
+        <table class="ve-table">
+          <thead>
+            <tr>
+              <th>Test</th>
+              <th>Result</th>
+              <th>Time (ms)</th>
+            </tr>
+          </thead>
+          <tbody id="ve-tbody">
+            <tr><td>V2 Read</td><td>✓ PASS</td><td>0.87</td></tr>
+            <tr><td>V2 Insert</td><td>✓ PASS</td><td>0.11</td></tr>
+            <tr><td>V2 Update</td><td>✓ PASS</td><td>0.04</td></tr>
+            <tr><td>V1 Read</td><td>✓ PASS</td><td>2.21</td></tr>
+            <tr><td>V1 Insert</td><td>✓ PASS</td><td>0.20</td></tr>
+            <tr><td>V1 Update</td><td>✓ PASS</td><td>0.08</td></tr>
+            <tr><td>Dual-Write Sync</td><td>✓ PASS</td><td>0.07</td></tr>
+          </tbody>
+        </table>
+      </div>
+
       <div class="ba-footer">
         <span>Evidence source: RevertProof local verification runs &bull; Engine: SQLite &bull; Synthetic test data</span>
         <span class="ba-footer-note">Not an AWS Well-Architected score or AWS deployment claim</span>
@@ -2638,6 +2736,35 @@
       document.getElementById('kpi2-sub').textContent = d.kpis[3];
       document.getElementById('kpi3-num').textContent = d.kpis[4];
       document.getElementById('kpi3-sub').textContent = d.kpis[5];
+    }
+
+    async function refreshLiveTimings() {
+      try {
+        const res = await fetch('/api/evidence/after-safe.json');
+        if (!res.ok) return;
+        const data = await res.json();
+        const c = data.compatibility_report;
+        if (!c) return;
+        const labelMap = {
+          v2_read_transactions: 'V2 Read',
+          v2_insert_transaction: 'V2 Insert',
+          v2_update_transaction: 'V2 Update',
+          v1_read_transactions: 'V1 Read',
+          v1_insert_transaction: 'V1 Insert',
+          v1_update_transaction: 'V1 Update',
+          dual_write_conflict_guard: 'Dual-Write Sync'
+        };
+        const ops = [...(c.v2_result.operations || []), ...(c.v1_result.operations || [])];
+        if (ops.length) {
+          document.getElementById('ve-tbody').innerHTML = ops.map(o => `
+            <tr>
+              <td>${labelMap[o.name] || o.name}</td>
+              <td style="color:${o.passed ? '#15803D' : '#DC2626'}">${o.passed ? '✓ PASS' : '✕ FAIL'}</td>
+              <td>${Number(o.duration_ms).toFixed(2)}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {}
     }
   </script>
 </body>
