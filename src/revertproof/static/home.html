@@ -1240,6 +1240,219 @@
       border-radius: 999px;
     }
 
+    /* ================= SECTION 4B: BEFORE / AFTER MIGRATION ROLLBACK VERIFICATION ================= */
+    .ba-band {
+      background-color: #F7FAF8;
+      background-image:
+        radial-gradient(rgba(120, 113, 98, 0.035) 1px, transparent 0),
+        url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 120 0 L 0 0 0 120' fill='none' stroke='%23C9C4B5' stroke-opacity='0.28' stroke-width='1' stroke-dasharray='5 5'/%3E%3C/svg%3E");
+      background-size: 16px 16px, 120px 120px;
+      padding: 76px 28px 68px;
+      color: #0B0D0C;
+    }
+    .ba-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .ba-header {
+      display: flex;
+      align-items: baseline;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .ba-brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.55rem;
+      letter-spacing: 0.03em;
+      color: #0B5D3B;
+    }
+    .ba-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.35rem, 2.3vw, 1.75rem);
+      letter-spacing: 0.01em;
+      color: #0B0D0C;
+    }
+    .ba-sub {
+      font-size: 0.94rem;
+      color: #5C615E;
+      margin-bottom: 28px;
+    }
+    .ba-compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 54px 1fr;
+      gap: 0;
+      align-items: center;
+    }
+    .ba-card {
+      border-radius: 20px;
+      padding: 26px 28px;
+      border: 1.5px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .ba-card.before {
+      background: #FDF4F3;
+      border-color: #E7B9B4;
+    }
+    .ba-card.after {
+      background: #EFFBF3;
+      border-color: #A7DFB8;
+    }
+    .ba-card-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .ba-pill {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      padding: 7px 20px;
+      border-radius: 10px;
+    }
+    .ba-pill.red { background: #F7D5D2; color: #A62019; }
+    .ba-pill.green { background: #D2F4DD; color: #0B6B3A; }
+    .ba-card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: 0.01em;
+      color: #111614;
+    }
+    .ba-caption {
+      font-size: 0.92rem;
+      color: #464B48;
+      margin-top: -4px;
+    }
+    .ba-code-box {
+      background: #FFFFFF;
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.96rem;
+      line-height: 1.75;
+      font-weight: 600;
+    }
+    .ba-card.before .ba-code-box { border: 1px solid #E5C8C5; color: #A62019; }
+    .ba-card.after .ba-code-box { border: 1px solid #BCE5C9; color: #0B6B3A; }
+    .ba-res-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #5C615E;
+      text-transform: uppercase;
+    }
+    .ba-res-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-top: -6px;
+    }
+    .ba-big-status {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 2.55rem;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+    .ba-big-status.red { color: #B91C1C; }
+    .ba-big-status.green { color: #0F7B43; }
+    .ba-class-box {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ba-class-lbl { font-size: 0.86rem; color: #464B48; }
+    .ba-class-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 9px;
+      width: fit-content;
+    }
+    .ba-class-pill.red { background: #F8DFDD; color: #A62019; }
+    .ba-class-pill.green { background: #D4F3DF; color: #0B6B3A; }
+    .ba-decision-lbl {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #464B48;
+      margin-top: 2px;
+    }
+    .ba-decision-val {
+      font-size: 0.96rem;
+      font-weight: 700;
+      margin-top: -10px;
+    }
+    .ba-decision-val.red { color: #A62019; }
+    .ba-decision-val.green { color: #0B6B3A; }
+    .ba-arrow {
+      display: grid;
+      place-items: center;
+      color: #0F7B43;
+    }
+    .ba-measured {
+      margin-top: 24px;
+      background: #FFFFFF;
+      border: 1px solid #CFE3D6;
+      border-radius: 18px;
+      padding: 22px 26px;
+      box-shadow: 0 6px 20px rgba(11, 93, 59, 0.04);
+    }
+    .ba-measured-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.96rem;
+      letter-spacing: 0.04em;
+      color: #0B3D28;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+    .ba-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0;
+    }
+    .ba-metric {
+      padding: 4px 16px 4px 0;
+      border-right: 1px solid #DFEAE2;
+      margin-right: 16px;
+    }
+    .ba-metric:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+    .ba-metric-lbl {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #5C615E;
+      letter-spacing: 0.03em;
+      margin-bottom: 8px;
+    }
+    .ba-metric-val {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #0B6B3A;
+    }
+    .ba-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #5C615E;
+    }
+    .ba-footer-note { color: #8C5852; }
+
     /* Section 5 — Production Scale & Interactive Chart */
     .scale-divider {
       height: 1px;
@@ -1457,7 +1670,10 @@
     }
 
     @media (max-width: 1040px) {
-      .example-grid, .pipeline-grid, .scale-grid, .chart-body { grid-template-columns: 1fr; gap: 18px; }
+      .example-grid, .pipeline-grid, .scale-grid, .chart-body, .ba-compare-grid { grid-template-columns: 1fr; gap: 18px; }
+      .ba-arrow { transform: rotate(90deg); height: 34px; }
+      .ba-metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .ba-metric { border-right: none; margin-right: 0; }
       .pipe-connector-col, .feedback-svg-wrap svg { display: none; }
       .step-dash { display: none; }
       .stepper-row { gap: 10px; }
@@ -2005,9 +2221,112 @@
           </div>
         </div>
       </section>
+    </div>
+  </div>
 
-      <div class="scale-divider"></div>
+  <!-- SECTION 4B: BEFORE / AFTER — MIGRATION ROLLBACK VERIFICATION (Matches Analysis output 1 (1).png) -->
+  <section id="before-after" class="ba-band">
+    <div class="ba-inner">
+      <div class="ba-header">
+        <span class="ba-brand">REVERTPROOF</span>
+        <h2 class="ba-title">BEFORE &nbsp;/&nbsp; AFTER &mdash; MIGRATION ROLLBACK VERIFICATION</h2>
+      </div>
+      <div class="ba-sub">Same banking migration workflow &bull; 1,000 synthetic transactions &bull; SQLite test engine</div>
 
+      <div class="ba-compare-grid">
+        <!-- BEFORE Card -->
+        <div class="ba-card before">
+          <div class="ba-card-head">
+            <span class="ba-pill red">BEFORE</span>
+            <span class="ba-card-title">UNSAFE BANKING MIGRATION</span>
+          </div>
+          <div class="ba-caption">Direct destructive schema change</div>
+          <div class="ba-code-box">
+            <div>DROP COLUMN currency;</div>
+            <div>ALTER amount TYPE JSONB;</div>
+          </div>
+          <div class="ba-res-label">VERIFICATION RESULT</div>
+          <div class="ba-res-row">
+            <div class="ba-big-status red">FAIL</div>
+            <div class="ba-class-box">
+              <span class="ba-class-lbl">Rollback classification</span>
+              <span class="ba-class-pill red">ROLL_FORWARD_ONLY</span>
+            </div>
+          </div>
+          <div class="ba-decision-lbl">Deployment decision</div>
+          <div class="ba-decision-val red">BLOCKED &mdash; rollback not proven safe</div>
+        </div>
+
+        <!-- Center Green Arrow -->
+        <div class="ba-arrow" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+        </div>
+
+        <!-- AFTER Card -->
+        <div class="ba-card after">
+          <div class="ba-card-head">
+            <span class="ba-pill green">AFTER</span>
+            <span class="ba-card-title">SAFE EXPAND-AND-CONTRACT</span>
+          </div>
+          <div class="ba-caption">Add new fields &bull; backfill &bull; bidirectional dual-write</div>
+          <div class="ba-code-box">
+            <div>ADD amount_minor BIGINT;</div>
+            <div>KEEP legacy amount + currency;</div>
+          </div>
+          <div class="ba-res-label">VERIFICATION RESULT</div>
+          <div class="ba-res-row">
+            <div class="ba-big-status green">PASS</div>
+            <div class="ba-class-box">
+              <span class="ba-class-lbl">Rollback classification</span>
+              <span class="ba-class-pill green">SAFE_ROLLBACK</span>
+            </div>
+          </div>
+          <div class="ba-decision-lbl">Deployment decision</div>
+          <div class="ba-decision-val green">APPROVED &mdash; tested rollback to V1</div>
+        </div>
+      </div>
+
+      <!-- MEASURED AFTER SAFE MIGRATION -->
+      <div class="ba-measured">
+        <div class="ba-measured-title">MEASURED AFTER SAFE MIGRATION</div>
+        <div class="ba-metrics-grid">
+          <div class="ba-metric">
+            <div class="ba-metric-lbl">V1 COMPATIBILITY</div>
+            <div class="ba-metric-val">PASS</div>
+          </div>
+          <div class="ba-metric">
+            <div class="ba-metric-lbl">V2 COMPATIBILITY</div>
+            <div class="ba-metric-val">PASS</div>
+          </div>
+          <div class="ba-metric">
+            <div class="ba-metric-lbl">DUAL-WRITE SYNC</div>
+            <div class="ba-metric-val">PASS</div>
+          </div>
+          <div class="ba-metric">
+            <div class="ba-metric-lbl">RECORDS PRESERVED</div>
+            <div class="ba-metric-val">1,000 / 1,000</div>
+          </div>
+          <div class="ba-metric">
+            <div class="ba-metric-lbl">DATA MISMATCHES</div>
+            <div class="ba-metric-val">0</div>
+          </div>
+          <div class="ba-metric">
+            <div class="ba-metric-lbl">MISSING / DUPLICATE</div>
+            <div class="ba-metric-val">0 / 0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ba-footer">
+        <span>Evidence source: RevertProof local verification runs &bull; Engine: SQLite &bull; Synthetic test data</span>
+        <span class="ba-footer-note">Not an AWS Well-Architected score or AWS deployment claim</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: DARK PRODUCTION SCALE BAND -->
+  <div class="dark-band">
+    <div class="dark-inner">
       <!-- SECTION 5: SAFE DATABASE CHANGES AT PRODUCTION SCALE (Matches RevertProof_ Safe Database Deployments.png) -->
       <section id="scale">
         <h2 class="dark-heading">SAFE DATABASE CHANGES AT <span class="mint-text">PRODUCTION</span> SCALE</h2>
