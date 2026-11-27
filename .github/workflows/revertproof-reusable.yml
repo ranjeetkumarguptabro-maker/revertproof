@@ -1,0 +1,75 @@
+name: RevertProof Reusable PR Migration Gate
+
+# Any engineering team can call this workflow from their own repository:
+#   jobs:
+#     migration-safety:
+#       uses: ranjeetkumarguptabro-maker/revertproof/.github/workflows/revertproof-reusable.yml@main
+#       with:
+#         config_path: revertproof.yaml
+#       secrets: inherit
+
+on:
+  workflow_call:
+    inputs:
+      config_path:
+        description: Path to revertproof.yaml in the caller repository
+        required: false
+        type: string
+        default: revertproof.yaml
+      publish_pr_status:
+        description: Publish real GitHub Commit Status and PR comment
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  statuses: write
+  pull-requests: write
+
+jobs:
+  revertproof-gate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: revertproof_test
+          POSTGRES_USER: rp_tester
+          POSTGRES_PASSWORD: rp_ci_ephemeral_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout caller repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install RevertProof
+        run: python -m pip install "git+https://github.com/ranjeetkumarguptabro-maker/revertproof.git#egg=revertproof[postgres]"
+
+      - name: Run RevertProof Rollback Safety Gate
+        env:
+          RP_DATABASE_URL: postgresql://rp_tester:rp_ci_ephemeral_only@localhost:5432/revertproof_test
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ inputs.publish_pr_status }}" = "true" ]; then
+            revertproof github-check \
+              --repo "${{ github.repository }}" \
+              --pr "${{ github.event.pull_request.number }}" \
+              --sha "${{ github.event.pull_request.head.sha }}" \
+              --config "${{ inputs.config_path }}" \
+              --publish
+          else
+            revertproof run --config "${{ inputs.config_path }}" --base-ref "HEAD~1"
+          fi

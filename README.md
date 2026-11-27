@@ -57,6 +57,44 @@ flowchart LR
 
 ---
 
+## Using RevertProof in Any Company Repository (Real Product Workflow)
+
+RevertProof is a **config-driven platform** — the banking and e-commerce scenarios are built-in test cases, not hardcoded limits.
+
+### 1. Initialize in Your Repository
+```bash
+revertproof init --name my-service
+```
+Edit `revertproof.yaml` to define your `migration_dirs`, `baseline_sql`, `v1_contracts` / `v2_contracts` (SQL queries **or** real `pytest`/Docker commands with `RP_DATABASE_URL` injected), table `invariants`, and `blocked_db_patterns`. See [examples/banking/revertproof.yaml](examples/banking/revertproof.yaml) for a complete example.
+
+### 2. Run Locally or in CI
+```bash
+# Validate isolated test DB connectivity & production-DB guard
+revertproof test-connection "postgresql://rp_tester:pass@localhost:54329/revertproof_test"
+
+# Run config-driven verification on changed migrations (via git diff or explicit file)
+revertproof run --config examples/banking/revertproof.yaml --migration sql/safe_expand.sql
+```
+
+### 3. Drop into GitHub Actions (Reusable Workflow)
+```yaml
+jobs:
+  migration-rollback-gate:
+    uses: ranjeetkumarguptabro-maker/revertproof/.github/workflows/revertproof-reusable.yml@main
+    with:
+      config_path: revertproof.yaml
+      publish_pr_status: true
+    secrets: inherit
+```
+RevertProof detects changed `.sql` migrations in the PR, rehearses them in an isolated PostgreSQL 16 database, runs V2 + V1 contracts and live schema diff, posts a real GitHub Commit Status check + Markdown PR review comment, and blocks merging on failure.
+
+### 4. Security, Auth & Production-Readiness Honesty
+- **Locally Verified:** Production-DB URL guard (`ProductionDatabaseBlockedError`), PBKDF2-SHA256 + HMAC-SHA256 bearer auth & RBAC (`admin`/`developer`/`viewer`), CI `X-API-Key`, GitHub Webhook `X-Hub-Signature-256` verification, append-only audit log, password masking, path-traversal protection, config-driven `revertproof.yaml` runner, live schema diff, and 28 automated tests.
+- **AWS-Ready (Not Yet Deployed):** CloudFormation template (`infra/cloudformation/revertproof-stack.yaml`) for private VPC, private encrypted RDS PG16 (`rds.force_ssl=1`), Secrets Manager, S3 TLS-only evidence bucket, CodeBuild, CodePipeline, and CloudWatch alarms.
+- **Requires Production Hardening Before Enterprise Rollout:** External PostgreSQL metadata store (replacing local SQLite `StateStore`), OIDC/SSO identity provider integration, KMS CMK rotation, VPC Interface Endpoints for zero-internet CodeBuild egress, and multi-replica rate limiting.
+
+---
+
 ## Quick Start (Local)
 
 ### 1. Install

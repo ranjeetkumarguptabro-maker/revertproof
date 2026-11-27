@@ -60,12 +60,15 @@
 
   <nav class="nav">
     <button class="active" onclick="showTab('overview', this)">1. Overview</button>
-    <button onclick="showTab('scanner', this)">2. Migration Scanner</button>
-    <button onclick="showTab('compatibility', this)">3. Compatibility Testing</button>
-    <button onclick="showTab('integrity', this)">4. Transaction Integrity</button>
-    <button onclick="showTab('gate', this)">5. Deployment Safety Gate</button>
-    <button onclick="showTab('history', this)">6. Test History</button>
-    <button onclick="showTab('reports', this)">7. Detailed Reports</button>
+    <button onclick="showTab('repos', this)">2. GitHub Repos</button>
+    <button onclick="showTab('connections', this)">3. DB Connections</button>
+    <button onclick="showTab('scanner', this)">4. Migration Scanner</button>
+    <button onclick="showTab('compatibility', this)">5. Compatibility &amp; Diff</button>
+    <button onclick="showTab('integrity', this)">6. Data Integrity</button>
+    <button onclick="showTab('gate', this)">7. Safety Gate</button>
+    <button onclick="showTab('history', this)">8. Test History</button>
+    <button onclick="showTab('reports', this)">9. Reports</button>
+    <button onclick="showTab('audit', this)">10. Audit Logs</button>
   </nav>
 
   <main>
@@ -88,7 +91,38 @@
       <div class="card" id="overview-latest">Loading latest run...</div>
     </section>
 
-    <!-- 2. MIGRATION SCANNER -->
+    <!-- 2. GITHUB REPOSITORIES -->
+    <section id="tab-repos" class="section">
+      <div class="card">
+        <h3>Connect Real GitHub Repository</h3>
+        <p style="color:var(--muted);font-size:0.86rem;">Register any GitHub repository to detect SQL migrations in PRs and enforce rollback safety checks via GitHub Actions or Webhooks (<code>POST /api/webhooks/github</code>).</p>
+        <div class="btn-row">
+          <input id="repo-name" placeholder="owner/repo (e.g. ranjeetkumarguptabro-maker/revertproof)" style="flex:1;min-width:260px;padding:0.5rem;border-radius:8px;border:1px solid var(--border);background:#020617;color:var(--text);" />
+          <input id="repo-dirs" value="migrations, sql" placeholder="migration dirs" style="width:180px;padding:0.5rem;border-radius:8px;border:1px solid var(--border);background:#020617;color:var(--text);" />
+          <button class="btn" onclick="connectRepo()">Connect Repository</button>
+        </div>
+        <div id="repo-msg" class="status-msg"></div>
+        <table><thead><tr><th>Repository</th><th>Branch</th><th>Migration Dirs</th><th>Config</th><th>GitHub Verified</th><th>Added By</th></tr></thead><tbody id="repos-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- 3. DB CONNECTIONS -->
+    <section id="tab-connections" class="section">
+      <div class="card">
+        <h3>Isolated Test Database Connections (Production-DB Guard Active)</h3>
+        <p style="color:var(--muted);font-size:0.86rem;">Passwords are masked at rest; any URL matching production patterns (<code>prod</code>, <code>production</code>, <code>live</code>) is automatically blocked.</p>
+        <div class="btn-row">
+          <input id="conn-name" placeholder="Profile name (e.g. rds-pg-test)" style="width:180px;padding:0.5rem;border-radius:8px;border:1px solid var(--border);background:#020617;color:var(--text);" />
+          <input id="conn-url" placeholder="postgresql://rp_tester:pass@host:5432/revertproof_test" style="flex:1;min-width:280px;padding:0.5rem;border-radius:8px;border:1px solid var(--border);background:#020617;color:var(--text);" />
+          <button class="btn" onclick="testDbConn()">Test Connection</button>
+          <button class="btn btn-green" onclick="saveDbConn()">Save Profile</button>
+        </div>
+        <div id="conn-msg" class="status-msg"></div>
+        <table><thead><tr><th>Name</th><th>Engine</th><th>Masked URL</th><th>Schema</th><th>Secret Ref</th></tr></thead><tbody id="conns-tbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- 4. MIGRATION SCANNER -->
     <section id="tab-scanner" class="section">
       <div class="card">
         <h3>Static SQL Migration Scanner (Works for Any Schema)</h3>
@@ -130,9 +164,17 @@ ALTER TABLE transactions DROP COLUMN currency;</textarea>
       </div>
     </section>
 
-    <!-- 7. DETAILED REPORTS -->
+    <!-- 9. DETAILED REPORTS -->
     <section id="tab-reports" class="section">
       <div class="card" id="report-detail-panel">Select a run from Test History or run a scenario to inspect raw JSON &amp; HTML evidence.</div>
+    </section>
+
+    <!-- 10. AUDIT LOGS -->
+    <section id="tab-audit" class="section">
+      <div class="card">
+        <h3>Security &amp; Activity Audit Log</h3>
+        <table><thead><tr><th>Timestamp</th><th>Actor</th><th>Role</th><th>Action</th><th>Resource</th><th>Outcome</th><th>Details</th></tr></thead><tbody id="audit-tbody"></tbody></table>
+      </div>
     </section>
   </main>
 
@@ -199,6 +241,63 @@ ALTER TABLE transactions DROP COLUMN currency;</textarea>
       `).join('') || '<tr><td colspan="8">No runs recorded yet.</td></tr>';
 
       if (currentReport) renderDetailedPanels(currentReport);
+      await refreshProductTabs();
+    }
+
+    async function refreshProductTabs() {
+      const repos = await (await fetch('/api/repositories')).json();
+      if (Array.isArray(repos)) {
+        document.getElementById('repos-tbody').innerHTML = repos.map(r => `
+          <tr><td><code>${r.full_name}</code></td><td>${r.default_branch}</td><td>${(r.migration_dirs||[]).join(', ')}</td><td><code>${r.config_path}</code></td><td>${badge(r.github_verified ? 'PASS' : 'SAFE')}</td><td>${r.created_by}</td></tr>
+        `).join('') || '<tr><td colspan="6">No repositories connected yet.</td></tr>';
+      }
+      const conns = await (await fetch('/api/connections')).json();
+      if (Array.isArray(conns)) {
+        document.getElementById('conns-tbody').innerHTML = conns.map(c => `
+          <tr><td><b>${c.name}</b></td><td>${c.engine}</td><td><code>${c.masked_url}</code></td><td><code>${c.schema_name}</code></td><td><code>${c.secret_ref || '—'}</code></td></tr>
+        `).join('') || '<tr><td colspan="5">No DB connection profiles saved yet.</td></tr>';
+      }
+      const audits = await (await fetch('/api/audit-logs')).json();
+      if (Array.isArray(audits)) {
+        document.getElementById('audit-tbody').innerHTML = audits.map(a => `
+          <tr><td>${a.timestamp.slice(0,19)}</td><td>${a.actor}</td><td>${a.role}</td><td><code>${a.action}</code></td><td><code>${a.resource}</code></td><td>${badge(a.outcome)}</td><td>${a.details}</td></tr>
+        `).join('') || '<tr><td colspan="7">No audit entries yet.</td></tr>';
+      }
+    }
+
+    async function connectRepo() {
+      const full_name = document.getElementById('repo-name').value.trim();
+      const migration_dirs = document.getElementById('repo-dirs').value.split(',').map(s => s.trim()).filter(Boolean);
+      const resp = await fetch('/api/repositories', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({full_name, migration_dirs})
+      });
+      const data = await resp.json();
+      document.getElementById('repo-msg').textContent = resp.ok ? `Connected ${data.full_name}` : `Error: ${data.detail}`;
+      await refreshAll();
+    }
+
+    async function testDbConn() {
+      const database_url = document.getElementById('conn-url').value.trim();
+      const resp = await fetch('/api/connections/test', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({database_url})
+      });
+      const data = await resp.json();
+      document.getElementById('conn-msg').textContent = resp.ok ? `OK (${data.engine}) — ${data.production_guard}` : `Blocked / Failed: ${data.detail}`;
+      await refreshProductTabs();
+    }
+
+    async function saveDbConn() {
+      const name = document.getElementById('conn-name').value.trim();
+      const database_url = document.getElementById('conn-url').value.trim();
+      const resp = await fetch('/api/connections', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name, database_url})
+      });
+      const data = await resp.json();
+      document.getElementById('conn-msg').textContent = resp.ok ? `Saved profile '${data.name}' (${data.masked_url})` : `Blocked / Failed: ${data.detail}`;
+      await refreshAll();
     }
 
     async function selectReport(runId) {

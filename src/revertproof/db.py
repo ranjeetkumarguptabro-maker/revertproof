@@ -12,10 +12,13 @@ from __future__ import annotations
 import logging
 import re
 import sqlite3
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any
+
+from revertproof.safety_guard import validate_safe_test_database_url
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +43,9 @@ class DatabaseAdapter:
             raise ValueError(f"Unsafe SQL identifier: {name!r}")
         return name
 
-    def connect(self) -> None:
+    def connect(self, max_retries: int = 3, blocked_patterns: list[str] | None = None) -> None:
+        """Validate safety guardrails and connect with bounded retry backoff."""
+        validate_safe_test_database_url(self.database_url, blocked_patterns=blocked_patterns)
         if self.is_postgres:
             try:
                 import psycopg  # type: ignore[import-not-found]
@@ -48,12 +53,18 @@ class DatabaseAdapter:
                 raise DatabaseUnavailableError(
                     "psycopg is not installed. Install with: pip install -e '.[postgres]'"
                 ) from exc
-            try:
-                self._conn = psycopg.connect(self.database_url, autocommit=False)
-            except Exception as exc:
-                raise DatabaseUnavailableError(
-                    f"Cannot connect to PostgreSQL test database: {exc}"
-                ) from exc
+            last_exc: Exception | None = None
+            for attempt in range(1, max_retries + 1):
+                try:
+                    self._conn = psycopg.connect(self.database_url, autocommit=False)
+                    return
+                except Exception as exc:
+                    last_exc = exc
+                    if attempt < max_retries:
+                        time.sleep(0.25 * attempt)
+            raise DatabaseUnavailableError(
+                f"Cannot connect to PostgreSQL test database after {max_retries} attempts: {last_exc}"
+            ) from last_exc
         else:
             path = self.database_url.replace("sqlite:///", "", 1)
             if not path or path == ":memory:":
@@ -63,6 +74,18 @@ class DatabaseAdapter:
                 self._conn.row_factory = sqlite3.Row
             except Exception as exc:
                 raise DatabaseUnavailableError(f"Cannot open SQLite database: {exc}") from exc
+
+    def cleanup_isolated_schema(self) -> None:
+        """Drop temporary isolated test schema after verification completes."""
+        if self._conn is None:
+            return
+        if self.is_postgres:
+            try:
+                with self._conn.cursor() as cur:
+                    cur.execute(f"DROP SCHEMA IF EXISTS {self.schema_name} CASCADE;")
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
 
     def close(self) -> None:
         if self._conn is not None:
@@ -219,12 +242,12 @@ class DatabaseAdapter:
                 currency_code = TRIM(currency);
 
             CREATE TABLE transactions_expanded (
-                transaction_id TEXT PRIMARY KEY,
-                amount NUMERIC,
-                currency TEXT,
-                occurred_at TEXT NOT NULL,
-                amount_minor INTEGER,
-                currency_code TEXT
+                transaction_id VARCHAR(32) PRIMARY KEY,
+                amount NUMERIC(14, 2),
+                currency CHAR(3),
+                occurred_at TIMESTAMP NOT NULL,
+                amount_minor BIGINT,
+                currency_code CHAR(3)
             );
             INSERT INTO transactions_expanded (transaction_id, amount, currency, occurred_at, amount_minor, currency_code)
             SELECT transaction_id, amount, currency, occurred_at, amount_minor, currency_code FROM transactions;

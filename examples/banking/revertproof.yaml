@@ -1,0 +1,68 @@
+# Example RevertProof configuration for a Banking / FinTech repository.
+# Any company can adapt this file to their own tables, SQL contracts, or pytest/Docker commands.
+
+project_name: banking-ledger
+migration_dirs:
+  - sql
+baseline_sql: sql/baseline.sql
+seed_sql: examples/banking/seed.sql
+
+v2_contracts:
+  version_label: "Banking App V2"
+  sql_checks:
+    - name: v2_read_minor_units
+      operation_type: READ
+      sql: "SELECT transaction_id, amount_minor, currency_code FROM transactions ORDER BY transaction_id;"
+      expect_min_rows: 3
+      description: "V2 reads exact integer minor units and currency_code"
+    - name: v2_insert_transaction
+      operation_type: INSERT
+      sql: "INSERT INTO transactions (transaction_id, amount_minor, currency_code, occurred_at) VALUES (%s, %s, %s, %s);"
+      params: ["TX_CFG_V2", 4599, "EUR", "2026-11-27 12:00:00"]
+      description: "V2 writes new transaction using minor-unit columns"
+
+v1_contracts:
+  version_label: "Banking App V1 (Rollback Target)"
+  sql_checks:
+    - name: v1_read_legacy_amount_currency
+      operation_type: READ
+      sql: "SELECT transaction_id, amount, currency, occurred_at FROM transactions ORDER BY transaction_id;"
+      expect_min_rows: 3
+      description: "V1 reads legacy decimal amount and currency column"
+    - name: v1_insert_legacy_transaction
+      operation_type: INSERT
+      sql: "INSERT INTO transactions (transaction_id, amount, currency, occurred_at) VALUES (%s, %s, %s, %s);"
+      params: ["TX_CFG_V1", "77.40", "EUR", "2026-11-27 12:05:00"]
+      description: "V1 writes legacy columns during rollback window"
+
+invariants:
+  - table: transactions
+    primary_key: transaction_id
+    required_not_null:
+      - amount
+      - currency
+      - amount_minor
+      - currency_code
+    preserve_row_count: true
+    preserve_primary_keys: true
+    numeric_parity:
+      - legacy_column: amount
+        new_column: amount_minor
+        multiplier: 100
+    column_parity:
+      - legacy_column: currency
+        new_column: currency_code
+    cleanup_probe_ids:
+      - TX_CFG_V2
+      - TX_CFG_V1
+
+policy:
+  block_on_v1_failure: true
+  block_on_v2_failure: true
+  block_on_integrity_failure: true
+  block_on_critical_scan: true
+  blocked_db_patterns:
+    - prod
+    - production
+    - live
+    - primary-db
