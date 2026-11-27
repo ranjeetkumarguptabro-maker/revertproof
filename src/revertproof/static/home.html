@@ -2627,39 +2627,39 @@
         <div class="war-head">
           <div>
             <div class="war-title">Architecture Review &amp; Remediation</div>
-            <div class="war-sub">Official review evidence &mdash; add after running the official AWS Agent Toolkit <code>aws-well-architected-review</code> skill</div>
+            <div class="war-sub">Executed with official AWS Agent Toolkit <code>aws-well-architected-review</code> (v4, Reliability Pillar) against live AWS stack <code>revertproof-hackathon</code> (<code>eu-north-1</code>)</div>
           </div>
-          <span class="war-status-pill">PENDING OFFICIAL SKILL RUN</span>
+          <span class="war-status-pill" style="background:#DCFCE7;color:#0B5D3B;border-color:#86EFAC;">✓ REMEDIATED &amp; VERIFIED IN AWS</span>
         </div>
 
         <div class="war-grid">
           <div class="war-step">
             <div class="war-step-num"><span class="num-badge">01</span> Original finding</div>
-            <p>Show the exact Reliability Pillar issue identified by the official AWS Agent Toolkit review.</p>
-            <div class="war-slot">Awaiting verbatim output:<br/><code>docs/well-architected-before.md</code></div>
+            <p><strong>REL-01 (Critical), REL-02 &amp; REL-04 (High):</strong> Private subnets lacked an S3 Gateway Endpoint, CloudWatch alarms had no SNS notifications or RDS health alarms, and <code>boto3</code> lacked adaptive retries/timeouts.</p>
+            <div class="war-slot">Preserved Before report:<br/><code>docs/well-architected-before.md</code></div>
           </div>
 
           <div class="war-step">
             <div class="war-step-num"><span class="num-badge">02</span> Recommendation selected</div>
-            <p>Show the original AWS recommendation and why it matters to RevertProof's deployment safety architecture.</p>
-            <div class="war-slot">Awaiting selected Reliability Pillar finding ID &amp; rationale.</div>
+            <p>Selected the 3 "Do First" Reliability fixes (<code>REL-01</code>, <code>REL-02</code>, <code>REL-04</code>) to guarantee private-subnet S3 delivery, real-time SNS alerting on blocked releases/RDS health, and resilient AWS API retries.</p>
+            <div class="war-slot">Pillar: Reliability (REL02, REL05, REL06)</div>
           </div>
 
           <div class="war-step">
             <div class="war-step-num"><span class="num-badge">03</span> Implemented change</div>
-            <p>Show the actual code, CloudFormation infrastructure, and architecture changes applied.</p>
-            <div class="war-slot">Target IaC:<br/><code>infra/cloudformation/revertproof-stack.yaml</code></div>
+            <p>Added <code>S3GatewayEndpoint</code>, KMS-encrypted SNS topic + <code>aws:SourceAccount</code> policy, RDS CPU/Storage alarms, and adaptive <code>botocore.config.Config</code> retries (5 attempts, 5s/15s timeouts).</p>
+            <div class="war-slot">Live AWS IDs:<br/><code>vpce-0d535b2c3eeabc7ba</code><br/><code>revertproof-reliability-alerts</code></div>
           </div>
 
           <div class="war-step">
             <div class="war-step-num"><span class="num-badge">04</span> Before vs After</div>
-            <p>Compare the original failure scenario with the verified improved post-remediation result.</p>
-            <div class="war-slot">Awaiting measured AWS before &amp; after comparison.</div>
+            <p><strong>Before:</strong> Reliability 3/5, 1 Critical + 3 High, silent alarms.<br/><strong>After:</strong> Reliability 4/5, <strong>0 Critical</strong>, live AWS <code>UPDATE_COMPLETE</code>, 30/30 tests passing.</p>
+            <div class="war-slot">Post-remediation:<br/><code>docs/well-architected-after.md</code></div>
           </div>
 
           <div class="war-step">
             <div class="war-step-num"><span class="num-badge">05</span> Verification evidence</div>
-            <p>Link actual test reports, Git commit history, and pre/post assessment outputs.</p>
+            <p>Full Git commit history, 30 automated tests (incl. <code>test_aws_reliability.py</code>), and live S3/CloudWatch evidence in <code>eu-north-1</code>.</p>
             <div class="war-slot">
               <a href="https://github.com/ranjeetkumarguptabro-maker/revertproof/commits/main" target="_blank">Git Commits</a> &bull;
               <a href="/api/evidence/after-safe.json" target="_blank">JSON Report</a> &bull;

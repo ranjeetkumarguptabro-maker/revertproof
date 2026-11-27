@@ -15,12 +15,19 @@ When a developer submits a database migration alongside application V2, RevertPr
 4. **Verifies exact financial integrity** using integer minor units (cents — never binary float), confirming zero missing IDs, zero duplicates, zero currency drift, and zero NULL violations.
 5. **Blocks unsafe deployments** with a non-zero exit code in AWS CodeBuild/CodePipeline and persists JSON + HTML evidence reports to Amazon S3.
 
-### Well-Architected Review Section *(Fill in after running the official Agent Toolkit skill)*
-- **Skill Used:** Official AWS Agent Toolkit `aws-well-architected-review` skill
-- **Recommendation Surfaced:** *(Paste exact finding ID and summary from `docs/well-architected-review-report.md`)*
-- **Why We Chose It:** *(Explain security/reliability/operational impact)*
-- **What We Changed:** *(Link exact commit SHA and CloudFormation/code diff)*
-- **Measured Before vs. After:** *(Paste actual before/after test and review evidence)*
+### Well-Architected Review Section (Verified Live in AWS `eu-north-1`)
+- **Skill Used:** Official AWS Agent Toolkit `aws-well-architected-review` (v4, Reliability Pillar scope, disclosed degraded title-based run — preserved in `docs/well-architected-before.md` & `docs/well-architected-after.md`)
+- **Recommendations Surfaced & Selected:**
+  1. **`REL-01` (Critical):** Private VPC subnets (`PrivateRouteTable`) lacked an S3 Gateway Endpoint for `SafetyGateCodeBuild`.
+  2. **`REL-02` (High):** `DeploymentBlockedAlarm` had no SNS `AlarmActions`, only monitored `Domain=banking`, and no RDS health alarms existed.
+  3. **`REL-04` (High):** `boto3` clients in `src/revertproof/aws_integration.py` lacked adaptive retry backoff and explicit timeouts.
+- **What We Changed:**
+  - Added `S3GatewayEndpoint` (`vpce-0d535b2c3eeabc7ba`) to `PrivateRouteTable` with least-privilege bucket policy.
+  - Added KMS-encrypted `RevertProofAlertsTopic` (`arn:aws:sns:eu-north-1:190936935872:revertproof-reliability-alerts`) with `aws:SourceAccount` policy, wired to `DeploymentBlockedAlarm` (`Domain=all`), `RDSLowStorageAlarm`, and `RDSHighCPUAlarm`.
+  - Added shared `get_aws_client_config()` (`max_attempts=5`, `mode="adaptive"`, `connect_timeout=5`, `read_timeout=15`) across Secrets Manager, S3, and CloudWatch clients + `tests/test_aws_reliability.py`.
+- **Measured Before vs. After:**
+  - **Before:** Reliability `3/5` (`1 Critical`, `3 High`), 28 tests, silent alarms.
+  - **After:** Reliability `4/5` (`0 Critical`), `revertproof-hackathon` stack `UPDATE_COMPLETE` in `eu-north-1`, **30/30 tests passing** (`ruff check` clean), live S3 + CloudWatch evidence verified.
 
 ---
 

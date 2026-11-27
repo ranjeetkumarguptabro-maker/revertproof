@@ -16,3 +16,4 @@ reports/*.html
 !reports/.gitkeep
 *.zip
 .DS_Store
+.agents/

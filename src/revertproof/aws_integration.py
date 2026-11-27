@@ -18,6 +18,17 @@ from revertproof.models import EvidenceReport
 logger = logging.getLogger(__name__)
 
 
+def get_aws_client_config() -> Any:
+    """REL-04 Remediation: Shared adaptive retry + bounded timeout config for all AWS SDK clients."""
+    from botocore.config import Config  # type: ignore[import-not-found]
+
+    return Config(
+        retries={"max_attempts": 5, "mode": "adaptive"},
+        connect_timeout=5,
+        read_timeout=15,
+    )
+
+
 def load_database_url_from_secrets_manager(settings: Settings) -> str | None:
     """Retrieve isolated RDS PostgreSQL credentials from AWS Secrets Manager with TLS enforced."""
     if not settings.aws_secret_id:
@@ -29,7 +40,9 @@ def load_database_url_from_secrets_manager(settings: Settings) -> str | None:
             "RP_AWS_SECRET_ID is set but boto3 is not installed. Run: pip install -e '.[aws]'"
         ) from exc
 
-    client = boto3.client("secretsmanager", region_name=settings.aws_region)
+    client = boto3.client(
+        "secretsmanager", region_name=settings.aws_region, config=get_aws_client_config()
+    )
     resp = client.get_secret_value(SecretId=settings.aws_secret_id)
     secret = json.loads(resp["SecretString"])
     user = quote_plus(str(secret["username"]))
@@ -54,7 +67,7 @@ def publish_evidence_to_s3(
     except ImportError:
         return {"s3_uploaded": False, "reason": "boto3 not installed"}
 
-    s3 = boto3.client("s3", region_name=settings.aws_region)
+    s3 = boto3.client("s3", region_name=settings.aws_region, config=get_aws_client_config())
     prefix = f"runs/{report.run_id}"
     json_key = f"{prefix}/report.json"
     html_key = f"{prefix}/report.html"
@@ -95,7 +108,7 @@ def publish_cloudwatch_metrics(
     except ImportError:
         return {"cloudwatch_published": False, "reason": "boto3 not installed"}
 
-    cw = boto3.client("cloudwatch", region_name=settings.aws_region)
+    cw = boto3.client("cloudwatch", region_name=settings.aws_region, config=get_aws_client_config())
     blocked_val = 1.0 if report.decision.value != "PASS" else 0.0
     try:
         cw.put_metric_data(
@@ -104,6 +117,12 @@ def publish_cloudwatch_metrics(
                 {
                     "MetricName": "DeploymentBlocked",
                     "Dimensions": [{"Name": "Domain", "Value": report.domain}],
+                    "Value": blocked_val,
+                    "Unit": "Count",
+                },
+                {
+                    "MetricName": "DeploymentBlocked",
+                    "Dimensions": [{"Name": "Domain", "Value": "all"}],
                     "Value": blocked_val,
                     "Unit": "Count",
                 },

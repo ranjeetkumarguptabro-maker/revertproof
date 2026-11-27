@@ -87,6 +87,28 @@ Resources:
       SubnetId: !Ref PrivateSubnetB
       RouteTableId: !Ref PrivateRouteTable
 
+  # REL-01 Remediation: Free S3 Gateway VPC Endpoint so private subnets reach S3 privately
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref RevertProofVPC
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt EvidenceBucket.Arn
+              - !Sub '${EvidenceBucket.Arn}/*'
+
   # Security Groups: Least-privilege ingress (only CodeBuild SG -> RDS:5432)
   CodeBuildSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -212,8 +234,32 @@ Resources:
                 aws:SecureTransport: false
 
   # ------------------------------------------------------------------
-  # 5. Amazon CloudWatch Logs & Deployment Blocked Alarm
+  # 5. Amazon CloudWatch Logs, KMS-Encrypted SNS Alerts & Health Alarms (REL-02 Remediation)
   # ------------------------------------------------------------------
+  RevertProofAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub '${ProjectName}-reliability-alerts'
+      KmsMasterKeyId: alias/aws/sns
+
+  AlertsTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref RevertProofAlertsTopic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudWatchAlarmsPublish
+            Effect: Allow
+            Principal:
+              Service: cloudwatch.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref RevertProofAlertsTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+
   CodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -224,18 +270,58 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub '${ProjectName}-deployment-blocked'
-      AlarmDescription: Triggers when RevertProof blocks an unsafe database migration
+      AlarmDescription: Triggers and notifies SNS when RevertProof blocks an unsafe database migration
       Namespace: RevertProof
       MetricName: DeploymentBlocked
       Dimensions:
         - Name: Domain
-          Value: banking
+          Value: all
       Statistic: Sum
       Period: 300
       EvaluationPeriods: 1
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref RevertProofAlertsTopic
+
+  RDSLowStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-rds-low-storage'
+      AlarmDescription: Alerts SNS when isolated test RDS free storage falls below 2 GB
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref IsolatedTestRDS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2147483648
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref RevertProofAlertsTopic
+
+  RDSHighCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${ProjectName}-rds-high-cpu'
+      AlarmDescription: Alerts SNS when isolated test RDS CPU exceeds 80%
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Ref IsolatedTestRDS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref RevertProofAlertsTopic
 
   # ------------------------------------------------------------------
   # 6. AWS CodeBuild — Least-Privilege Safety Gate Runner
@@ -411,6 +497,10 @@ Outputs:
     Value: !GetAtt IsolatedTestRDS.Endpoint.Address
   CodeBuildProjectName:
     Value: !Ref SafetyGateCodeBuild
+  S3GatewayEndpointId:
+    Value: !Ref S3GatewayEndpoint
+  AlertsTopicArn:
+    Value: !Ref RevertProofAlertsTopic
   PipelineName:
     Condition: HasCodeStarConnection
     Value: !Ref RevertProofPipeline
