@@ -942,7 +942,7 @@
       flex-wrap: wrap;
     }
     .step-pill-dark {
-      border: 1.5px solid #8CEAB3;
+      border: 1.5px solid #4E7B63;
       color: #E6F8ED;
       background: rgba(140, 234, 179, 0.06);
       font-family: 'JetBrains Mono', monospace;
@@ -951,22 +951,39 @@
       letter-spacing: 0.08em;
       padding: 9px 26px;
       border-radius: 999px;
+      animation: stagePulse 4s ease-in-out infinite;
     }
+    .step-pill-dark.s1 { animation-delay: 0s; }
+    .step-pill-dark.s2 { animation-delay: 1s; }
+    .step-pill-dark.s3 { animation-delay: 2s; }
+    .step-pill-dark.s4 { animation-delay: 3s; }
+
+    @keyframes stagePulse {
+      0%, 100% {
+        border-color: #4E7B63;
+        background: rgba(140, 234, 179, 0.06);
+        box-shadow: none;
+        color: #CFE3D8;
+      }
+      15%, 30% {
+        border-color: #8CEAB3;
+        background: rgba(140, 234, 179, 0.18);
+        box-shadow: 0 0 18px rgba(140, 234, 179, 0.35);
+        color: #FFFFFF;
+      }
+    }
+
     .step-dash {
-      width: 90px;
-      height: 2px;
-      background: repeating-linear-gradient(90deg, #4B6657 0 6px, transparent 6px 12px);
-      position: relative;
-      display: grid;
-      place-items: center;
+      width: 96px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .step-dash::after {
-      content: '';
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #8CEAB3;
-      box-shadow: 0 0 10px rgba(140, 234, 179, 0.65);
+    .step-dash svg {
+      width: 100%;
+      height: 20px;
+      overflow: visible;
     }
 
     .pipeline-stage-wrap {
@@ -1802,13 +1819,19 @@
         <div class="dark-sub">Test &bull; Verify &bull; Deploy with Rollback Confidence</div>
 
         <div class="stepper-row">
-          <span class="step-pill-dark">DETECT</span>
-          <span class="step-dash"></span>
-          <span class="step-pill-dark">TEST</span>
-          <span class="step-dash"></span>
-          <span class="step-pill-dark">VERIFY</span>
-          <span class="step-dash"></span>
-          <span class="step-pill-dark">DEPLOY</span>
+          <span class="step-pill-dark s1">DETECT</span>
+          <span class="step-dash" aria-hidden="true">
+            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="5 6"/><path class="flow-pulse" d="M 0 10 L 96 10"/><circle class="glow-node" cx="48" cy="10" r="4.2"/></svg>
+          </span>
+          <span class="step-pill-dark s2">TEST</span>
+          <span class="step-dash" aria-hidden="true">
+            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="5 6"/><path class="flow-pulse" d="M 0 10 L 96 10"/><circle class="glow-node" cx="48" cy="10" r="4.2"/></svg>
+          </span>
+          <span class="step-pill-dark s3">VERIFY</span>
+          <span class="step-dash" aria-hidden="true">
+            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="5 6"/><path class="flow-pulse" d="M 0 10 L 96 10"/><circle class="glow-node" cx="48" cy="10" r="4.2"/></svg>
+          </span>
+          <span class="step-pill-dark s4">DEPLOY</span>
         </div>
 
         <div class="pipeline-stage-wrap">
