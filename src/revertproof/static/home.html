@@ -985,6 +985,31 @@
       height: 20px;
       overflow: visible;
     }
+    .step-flow-fast {
+      stroke: #8CEAB3;
+      stroke-width: 2.6;
+      fill: none;
+      stroke-dasharray: 8 10;
+      animation: stepRun 0.75s linear infinite;
+      filter: drop-shadow(0 0 5px rgba(140, 234, 179, 0.85));
+    }
+    .travel-dot {
+      fill: #FFFFFF;
+      stroke: #8CEAB3;
+      stroke-width: 2;
+      filter: drop-shadow(0 0 7px rgba(140, 234, 179, 1));
+      animation: dotTravel 1.4s linear infinite;
+    }
+    @keyframes stepRun {
+      from { stroke-dashoffset: 18; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes dotTravel {
+      0% { transform: translateX(0px); opacity: 0.2; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { transform: translateX(90px); opacity: 0.2; }
+    }
 
     .pipeline-stage-wrap {
       position: relative;
@@ -1080,7 +1105,7 @@
       letter-spacing: 0.08em;
       padding: 9px 22px;
       border-radius: 999px;
-      margin-bottom: -10px;
+      margin-bottom: -28px;
       box-shadow: 0 0 0 8px #090C0B, 0 0 20px rgba(140, 234, 179, 0.14);
     }
 
@@ -1821,15 +1846,15 @@
         <div class="stepper-row">
           <span class="step-pill-dark s1">DETECT</span>
           <span class="step-dash" aria-hidden="true">
-            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="5 6"/><path class="flow-pulse" d="M 0 10 L 96 10"/><circle class="glow-node" cx="48" cy="10" r="4.2"/></svg>
+            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="4 6"/><path class="step-flow-fast" d="M 0 10 L 96 10"/><circle class="travel-dot" cx="3" cy="10" r="3.6"/></svg>
           </span>
           <span class="step-pill-dark s2">TEST</span>
           <span class="step-dash" aria-hidden="true">
-            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="5 6"/><path class="flow-pulse" d="M 0 10 L 96 10"/><circle class="glow-node" cx="48" cy="10" r="4.2"/></svg>
+            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="4 6"/><path class="step-flow-fast" d="M 0 10 L 96 10"/><circle class="travel-dot" cx="3" cy="10" r="3.6" style="animation-delay:0.45s"/></svg>
           </span>
           <span class="step-pill-dark s3">VERIFY</span>
           <span class="step-dash" aria-hidden="true">
-            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="5 6"/><path class="flow-pulse" d="M 0 10 L 96 10"/><circle class="glow-node" cx="48" cy="10" r="4.2"/></svg>
+            <svg viewBox="0 0 96 20"><path class="flow-line" d="M 0 10 L 96 10" stroke-dasharray="4 6"/><path class="step-flow-fast" d="M 0 10 L 96 10"/><circle class="travel-dot" cx="3" cy="10" r="3.6" style="animation-delay:0.9s"/></svg>
           </span>
           <span class="step-pill-dark s4">DEPLOY</span>
         </div>
