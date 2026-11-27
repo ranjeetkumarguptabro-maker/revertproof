@@ -11,6 +11,8 @@ Production-structured FastAPI backend with:
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import os
 import re
@@ -18,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
 from revertproof.auth import (
@@ -35,6 +37,7 @@ from revertproof.config import get_settings
 from revertproof.contract_runner import evaluate_project_migration
 from revertproof.db import DatabaseAdapter
 from revertproof.demo import run_full_demo
+from revertproof.fixtures import generate_banking_transactions
 from revertproof.gate import evaluate_migration, evaluate_migration_file
 from revertproof.github_integration import GitHubClient, verify_github_webhook_signature
 from revertproof.models import RiskSeverity
@@ -143,6 +146,142 @@ def health() -> dict[str, Any]:
         "auth_enabled": is_auth_enabled(),
         "report_dir": str(cfg.report_dir),
     }
+
+
+# --- Public Sanitized Evidence Downloads (JSON & CSV) ---
+def _sanitize_report_dict(data: dict[str, Any]) -> dict[str, Any]:
+    """Remove local host filesystem paths so exported evidence is clean and portable."""
+    clean = dict(data)
+    artifacts = dict(clean.get("aws_artifacts") or {})
+    artifacts.pop("local_json", None)
+    artifacts.pop("local_html", None)
+    clean["aws_artifacts"] = artifacts
+    clean["sanitized"] = True
+    clean["data_notice"] = "Synthetic test records only — no real customer or production data."
+    return clean
+
+
+@app.get("/api/evidence/before-unsafe.json")
+def download_before_unsafe_json() -> JSONResponse:
+    """Download sanitized JSON evidence report for BEFORE (Unsafe Banking Migration)."""
+    report = evaluate_migration_file(
+        PROJECT_ROOT / "sql" / "unsafe_v2.sql",
+        domain="banking",
+        scenario="before_unsafe_banking_migration",
+        fixture_count=1000,
+        settings=get_settings(),
+        save_report=False,
+    )
+    return JSONResponse(
+        content=_sanitize_report_dict(report.model_dump()),
+        headers={"Content-Disposition": 'attachment; filename="revertproof-before-unsafe.json"'},
+    )
+
+
+@app.get("/api/evidence/after-safe.json")
+def download_after_safe_json() -> JSONResponse:
+    """Download sanitized JSON evidence report for AFTER (Safe Expand-and-Contract)."""
+    report = evaluate_migration_file(
+        PROJECT_ROOT / "sql" / "safe_expand.sql",
+        domain="banking",
+        scenario="after_safe_expand_banking_migration",
+        fixture_count=1000,
+        settings=get_settings(),
+        save_report=False,
+    )
+    return JSONResponse(
+        content=_sanitize_report_dict(report.model_dump()),
+        headers={"Content-Disposition": 'attachment; filename="revertproof-after-safe.json"'},
+    )
+
+
+@app.get("/api/evidence/summary.csv")
+def download_summary_csv() -> PlainTextResponse:
+    """Download sanitized CSV summary comparing Before (Unsafe) vs After (Safe) verification runs."""
+    cfg = get_settings()
+    r_before = evaluate_migration_file(
+        PROJECT_ROOT / "sql" / "unsafe_v2.sql",
+        domain="banking",
+        scenario="before_unsafe_banking",
+        fixture_count=1000,
+        settings=cfg,
+        save_report=False,
+    )
+    r_after = evaluate_migration_file(
+        PROJECT_ROOT / "sql" / "safe_expand.sql",
+        domain="banking",
+        scenario="after_safe_expand_banking",
+        fixture_count=1000,
+        settings=cfg,
+        save_report=False,
+    )
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        [
+            "scenario",
+            "domain",
+            "engine",
+            "fixtures",
+            "decision",
+            "exit_code",
+            "rollback_classification",
+            "v1_compatibility",
+            "v2_compatibility",
+            "dual_write_sync",
+            "records_preserved",
+            "amount_mismatches",
+            "missing_ids",
+            "duplicate_ids",
+        ]
+    )
+    for r in (r_before, r_after):
+        ir = r.integrity_report
+        writer.writerow(
+            [
+                r.scenario,
+                r.domain,
+                r.engine,
+                r.fixture_count,
+                r.decision.value,
+                r.exit_code,
+                r.rollback_classification.value,
+                r.checks.get("v1_rollback_compatibility", "NOT_RUN"),
+                r.checks.get("v2_compatibility", "NOT_RUN"),
+                r.checks.get("dual_write_sync", "NOT_VERIFIED"),
+                ir.records_preserved if ir else 0,
+                ir.amount_mismatches if ir else "N/A",
+                len(ir.missing_ids) if ir else "N/A",
+                len(ir.duplicate_ids) if ir else "N/A",
+            ]
+        )
+    return PlainTextResponse(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="revertproof-verification-summary.csv"'},
+    )
+
+
+@app.get("/api/evidence/synthetic-transactions.csv")
+def download_synthetic_transactions_csv() -> PlainTextResponse:
+    """Download the sanitized 1,000 synthetic banking transaction dataset as CSV."""
+    fixtures = generate_banking_transactions(1000)
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        ["transaction_id", "amount", "currency", "amount_minor", "currency_code", "occurred_at"]
+    )
+    for tx in fixtures:
+        writer.writerow(
+            [tx.transaction_id, str(tx.amount), tx.currency, tx.amount_minor, tx.currency, tx.occurred_at]
+        )
+    return PlainTextResponse(
+        content=buf.getvalue(),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="revertproof-synthetic-1000-transactions.csv"'
+        },
+    )
 
 
 # --- Authentication & User Management ---

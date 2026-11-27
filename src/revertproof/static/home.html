@@ -1453,6 +1453,81 @@
     }
     .ba-footer-note { color: #8C5852; }
 
+    .ba-downloads {
+      margin-top: 22px;
+      background: #FFFFFF;
+      border: 1px solid #CFE3D6;
+      border-radius: 18px;
+      padding: 22px 26px;
+      box-shadow: 0 6px 20px rgba(11, 93, 59, 0.04);
+    }
+    .ba-downloads-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .ba-downloads-sub {
+      font-size: 0.84rem;
+      color: #5C615E;
+    }
+    .ba-dl-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .ba-dl-item {
+      background: #F8FBF9;
+      border: 1px solid #DCECE2;
+      border-radius: 14px;
+      padding: 15px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .ba-dl-type {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      width: fit-content;
+      margin-bottom: 6px;
+    }
+    .ba-dl-type.json { background: #E2F8E9; color: #0B5D3B; }
+    .ba-dl-type.csv { background: #EAE6DC; color: #2B2E2C; }
+    .ba-dl-name {
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #0B0D0C;
+      margin-bottom: 4px;
+    }
+    .ba-dl-desc {
+      font-size: 0.76rem;
+      color: #5C615E;
+      line-height: 1.4;
+    }
+    .ba-dl-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: #8CEAB3;
+      color: #0B0D0C;
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 9px 14px;
+      border-radius: 999px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .ba-dl-btn:hover { background: #6FE09F; transform: translateY(-1px); }
+
     /* Section 5 — Production Scale & Interactive Chart */
     .scale-divider {
       height: 1px;
@@ -1672,7 +1747,7 @@
     @media (max-width: 1040px) {
       .example-grid, .pipeline-grid, .scale-grid, .chart-body, .ba-compare-grid { grid-template-columns: 1fr; gap: 18px; }
       .ba-arrow { transform: rotate(90deg); height: 34px; }
-      .ba-metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .ba-metrics-grid, .ba-dl-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
       .ba-metric { border-right: none; margin-right: 0; }
       .pipe-connector-col, .feedback-svg-wrap svg { display: none; }
       .step-dash { display: none; }
@@ -2313,6 +2388,48 @@
           <div class="ba-metric">
             <div class="ba-metric-lbl">MISSING / DUPLICATE</div>
             <div class="ba-metric-val">0 / 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B. EVIDENCE DOWNLOADS (Sanitized Static JSON & CSV Datasets) -->
+      <div class="ba-downloads">
+        <div class="ba-downloads-head">
+          <div class="ba-measured-title" style="margin-bottom:0;">B. EVIDENCE DOWNLOADS</div>
+          <span class="ba-downloads-sub">Sanitized static JSON &amp; CSV datasets exported directly from RevertProof verification runs</span>
+        </div>
+        <div class="ba-dl-grid">
+          <div class="ba-dl-item">
+            <div>
+              <span class="ba-dl-type json">JSON REPORT</span>
+              <div class="ba-dl-name">Before (Unsafe Migration)</div>
+              <div class="ba-dl-desc">Full sanitized evidence report showing V2 PASS, V1 FAIL, and BLOCKED gate exit 1.</div>
+            </div>
+            <a class="ba-dl-btn" href="/api/evidence/before-unsafe.json" download="revertproof-before-unsafe.json">↓ Download JSON</a>
+          </div>
+          <div class="ba-dl-item">
+            <div>
+              <span class="ba-dl-type json">JSON REPORT</span>
+              <div class="ba-dl-name">After (Safe Expand)</div>
+              <div class="ba-dl-desc">Sanitized evidence report proving V1 &amp; V2 PASS, dual-write sync, and 1,000/1,000 parity.</div>
+            </div>
+            <a class="ba-dl-btn" href="/api/evidence/after-safe.json" download="revertproof-after-safe.json">↓ Download JSON</a>
+          </div>
+          <div class="ba-dl-item">
+            <div>
+              <span class="ba-dl-type csv">CSV SUMMARY</span>
+              <div class="ba-dl-name">Before vs. After Summary</div>
+              <div class="ba-dl-desc">Side-by-side tabular comparison of decisions, rollback classes, and mismatch counts.</div>
+            </div>
+            <a class="ba-dl-btn" href="/api/evidence/summary.csv" download="revertproof-verification-summary.csv">↓ Download CSV</a>
+          </div>
+          <div class="ba-dl-item">
+            <div>
+              <span class="ba-dl-type csv">CSV DATASET</span>
+              <div class="ba-dl-name">1,000 Synthetic Transactions</div>
+              <div class="ba-dl-desc">Sanitized synthetic dataset with exact legacy decimal and integer minor-unit columns.</div>
+            </div>
+            <a class="ba-dl-btn" href="/api/evidence/synthetic-transactions.csv" download="revertproof-synthetic-1000-transactions.csv">↓ Download CSV</a>
           </div>
         </div>
       </div>

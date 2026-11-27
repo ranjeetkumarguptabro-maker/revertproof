@@ -132,3 +132,21 @@ def test_dashboard_api_serves_real_results(monkeypatch, tmp_path: Path) -> None:
     scan_resp = client.post("/api/scan", json={"sql": "ALTER TABLE t DROP COLUMN c;"})
     assert scan_resp.status_code == 200
     assert scan_resp.json()["highest_severity"] == "CRITICAL"
+
+    # Sanitized Evidence Download endpoints (JSON & CSV)
+    ev_before = client.get("/api/evidence/before-unsafe.json")
+    assert ev_before.status_code == 200
+    assert ev_before.json()["decision"] == "FAIL"
+    assert ev_before.json()["sanitized"] is True
+
+    ev_after = client.get("/api/evidence/after-safe.json")
+    assert ev_after.status_code == 200
+    assert ev_after.json()["decision"] == "PASS"
+
+    ev_csv = client.get("/api/evidence/summary.csv")
+    assert ev_csv.status_code == 200
+    assert "before_unsafe_banking" in ev_csv.text and "after_safe_expand_banking" in ev_csv.text
+
+    tx_csv = client.get("/api/evidence/synthetic-transactions.csv")
+    assert tx_csv.status_code == 200
+    assert "TX0001,125.50,EUR,12550,EUR" in tx_csv.text
